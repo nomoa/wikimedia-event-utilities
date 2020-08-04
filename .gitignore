@@ -1,0 +1,19 @@
+# Maven
+target
+release.properties
+*.releaseBackup
+
+# Eclipse
+.project
+.classpath
+.settings
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# vim
+*.swp
