@@ -1,0 +1,18 @@
+{
+  "/^mediawiki\\.job\\..+/": {
+    "schema_title": "mediawiki/job",
+    "destination_event_service": "eventgate-main",
+    "topics":["/^(eqiad\\.|codfw\\.)mediawiki\\.job\\..+/"]
+  },
+  "mediawiki.page-create": {
+    "schema_title": "mediawiki/revision/create",
+    "destination_event_service": "eventgate-main",
+    "topics": ["eqiad.mediawiki.page-create", "codfw.mediawiki.page-create"]
+  },
+  "eventlogging_SearchSatisfaction": {
+    "schema_title": "analytics/legacy/searchsatisfaction",
+    "destination_event_service": "eventgate-analytics-external",
+    "topics": ["eventlogging_SearchSatisfaction"]
+  },
+  "no_settings": { }
+}
