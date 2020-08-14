@@ -57,7 +57,7 @@ public class TestCanaryEventProducer {
     private static JsonNode searchSatisfactionSchema;
 
     @BeforeAll
-    public static void setUp() throws RuntimeException, JsonLoadingException {
+    public static void setUp() throws JsonLoadingException {
         EventSchemaLoader eventSchemaLoader = new EventSchemaLoader(schemaBaseUris);
         EventStreamConfig eventStreamConfig = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile);
         EventStreamFactory eventStreamFactory = new EventStreamFactory(eventSchemaLoader, eventStreamConfig);

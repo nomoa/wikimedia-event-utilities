@@ -59,18 +59,14 @@ public class TestEventStream {
     private static JsonNode searchSatisfactionSchema;
 
     @BeforeAll
-    public static void setUp() throws RuntimeException {
+    public static void setUp() throws JsonLoadingException {
         // Read expected some data in for assertions
-        try {
-            pageCreateSchema = JsonLoader.getInstance().load(
-                URI.create(schemaBaseUris.get(0) + "/mediawiki/revision/create/latest")
-            );
-            searchSatisfactionSchema = JsonLoader.getInstance().load(
-                URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
-            );
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(e);
-        }
+        pageCreateSchema = JsonLoader.getInstance().load(
+            URI.create(schemaBaseUris.get(0) + "/mediawiki/revision/create/latest")
+        );
+        searchSatisfactionSchema = JsonLoader.getInstance().load(
+            URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
+        );
     }
 
     @Test

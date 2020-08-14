@@ -93,7 +93,7 @@ public class EventStreamConfig {
      * Useful for e.g. map, filter, reduce etc.
      * @return
      */
-    public Stream<Map.Entry<String,JsonNode>> fieldsStream() {
+    public Stream<Map.Entry<String, JsonNode>> fieldsStream() {
         return StreamSupport.stream(
             Spliterators.spliterator(
                 streamConfigsCache.fields(),

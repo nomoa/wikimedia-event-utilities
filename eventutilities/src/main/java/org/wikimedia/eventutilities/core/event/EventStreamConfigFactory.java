@@ -3,12 +3,16 @@ package org.wikimedia.eventutilities.core.event;
 import java.net.URI;
 import java.util.HashMap;
 
-public class EventStreamConfigFactory {
+public final class EventStreamConfigFactory {
 
     /**
      * Default Mediawiki API endpoint used to construct MediawikiEventStreamConfigLoader.
      */
     private static final String MEDIAWIKI_API_ENDPOINT_DEFAULT = "https://meta.wikimedia.org/w/api.php";
+
+    private EventStreamConfigFactory() {
+        // utility class, should never be constructed
+    }
 
     /**
      * TODO: We should be able to get puppet to render a
@@ -40,7 +44,6 @@ public class EventStreamConfigFactory {
      * Creates an EventStreamConfig instance loading config from the Mediawiki EventStreamConfig
      * extension API.
      * Uses MEDIAWIKI_API_ENDPOINT_DEFAULT and EVENT_SERVICE_TO_URI_MAP_DEFAULT.
-     * @return
      */
     public static EventStreamConfig createMediawikiEventStreamConfig() {
         return createMediawikiEventStreamConfig(
@@ -53,8 +56,6 @@ public class EventStreamConfigFactory {
      * Creates an EventStreamConfig instance loading config from the Mediawiki EventStreamConfig
      * extension.
      * Uses EVENT_SERVICE_TO_URI_MAP_DEFAULT.
-     * @param mediawikiApiEndpoint
-     * @return
      */
     public static EventStreamConfig createMediawikiEventStreamConfig(
         String mediawikiApiEndpoint
@@ -68,9 +69,6 @@ public class EventStreamConfigFactory {
     /**
      * Creates an EventStreamConfig instance loading config from the Mediawiki EventStreamConfig
      * extension API.
-     * @param mediawikiApiEndpoint
-     * @param eventServiceToUriMap
-     * @return
      */
     public static EventStreamConfig createMediawikiEventStreamConfig(
         String mediawikiApiEndpoint,

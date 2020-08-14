@@ -27,8 +27,6 @@ public class EventStreamFactory {
     /**
      * Constructs a new EventStreamFactory with new instances of
      * EventSchemaLoader and EventStreamConfig with the given URIs.
-     * @param schemaBaseUris
-     * @param eventStreamConfig
      */
     public EventStreamFactory(
         List<String> schemaBaseUris,
@@ -42,8 +40,6 @@ public class EventStreamFactory {
 
     /**
      * Constructs a new instance of EventStreamFactory.
-     * @param eventSchemaLoader
-     * @param eventStreamConfig
      */
     public EventStreamFactory(
         EventSchemaLoader eventSchemaLoader,
@@ -56,11 +52,6 @@ public class EventStreamFactory {
     /**
      * Creates an EventStreamFactory that creates EventStreams
      * using the Mediawiki EventStreamConfig API at mediawikiApiEndpoint.
-     *
-     * @param schemaBaseUris
-     * @param mediawikiApiEndpoint
-     * @param eventServiceToUriMap
-     * @return
      */
     public static EventStreamFactory createMediawikiConfigEventStreamFactory(
         List<String> schemaBaseUris,
@@ -79,11 +70,7 @@ public class EventStreamFactory {
     /**
      * Creates an EventStreamFactory that creates EventStreams
      * using the Mediawiki EventStreamConfig API at mediawikiApiEndpoint
-     * and the default eventServiceToUriMap
-     *
-     * @param schemaBaseUris
-     * @param mediawikiApiEndpoint
-     * @return
+     * and the default eventServiceToUriMap.
      */
     public static EventStreamFactory createMediawikiConfigEventStreamFactory(
         List<String> schemaBaseUris,
@@ -100,10 +87,7 @@ public class EventStreamFactory {
     /**
      * Creates an EventStreamFactory that creates EventStreams
      * using the Mediawiki EventStreamConfig API at mediawikiApiEndpoint
-     * and the default mediawikiApiEndpoint and eventServiceToUriMap
-     *
-     * @param schemaBaseUris
-     * @return
+     * and the default mediawikiApiEndpoint and eventServiceToUriMap.
      */
     public static EventStreamFactory createMediawikiConfigEventStreamFactory(
         List<String> schemaBaseUris
@@ -118,10 +102,6 @@ public class EventStreamFactory {
     /**
      * Creates an EventStreamFactory that creates EventStreams
      * using a static stream config local or remote file.
-     * @param schemaBaseUris
-     * @param streamConfigsUriString
-     * @param eventServiceToUriMap
-     * @return
      */
     public static EventStreamFactory createStaticConfigEventStreamFactory(
         List<String> schemaBaseUris,
@@ -140,11 +120,7 @@ public class EventStreamFactory {
     /**
      * Creates an EventStreamFactory that creates EventStream
      * using a static stream config local or remote file
-     * and the default eventServiceToUriMap
-     *
-     * @param schemaBaseUris
-     * @param streamConfigsUriString
-     * @return
+     * and the default eventServiceToUriMap.
      */
     public static EventStreamFactory createStaticConfigEventStreamFactory(
         List<String> schemaBaseUris,
@@ -161,18 +137,14 @@ public class EventStreamFactory {
     /**
      * Returns a new EventStream for this streamName using eventSchemaLoader and
      * eventStreamConfig.
-     * @param streamName
-     * @return
      */
     public EventStream createEventStream(String streamName) {
         return new EventStream(streamName, eventSchemaLoader, eventStreamConfig);
     }
 
     /**
-     * Returns a List of new EventStreams using eventSchemaLoader nad
+     * Returns a List of new EventStreams using eventSchemaLoader and
      * eventStreamConfig.
-     * @param streamNames
-     * @return
      */
     public List<EventStream> createEventStreams(List<String> streamNames) {
         return streamNames.stream()
@@ -182,7 +154,6 @@ public class EventStreamFactory {
 
     /**
      * Returns the EventStreamConfig instance this EventStreamFactory is using.
-     * @return
      */
     public EventStreamConfig getEventStreamConfig() {
         return eventStreamConfig;
@@ -190,7 +161,6 @@ public class EventStreamFactory {
 
     /**
      * Returns the EventSchemaLoader instance this EventStreamFactory is using.
-     * @return
      */
     public EventSchemaLoader getEventSchemaLoader() {
         return eventSchemaLoader;

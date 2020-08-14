@@ -33,8 +33,6 @@ public class JsonLoader {
      * Static method that uses the JsonLoader singleton to load and parse JSON
      * content at a URI.
      *
-     * @param uri
-     * @return
      * @throws JsonLoadingException
      */
     public static JsonNode get(URI uri) {
@@ -52,7 +50,6 @@ public class JsonLoader {
      * parse it into a JsonNode.  $refs will be resolved.
      * The compiled schema will be cached by schemaURI, and only looked up once per schemaURI.
      *
-     * @param uri
      * @return the jsonschema at schemaURI.
      */
     public JsonNode load(URI uri) throws JsonLoadingException {
@@ -60,15 +57,13 @@ public class JsonLoader {
         JsonParser parser;
         try {
             parser = this.getParser(uri);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new JsonLoadingException("Failed reading JSON/YAML data from " + uri, e);
         }
 
         try {
             return this.parse(parser);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new JsonLoadingException("Failed loading JSON/YAML data from " + uri, e);
         }
     }
@@ -76,16 +71,15 @@ public class JsonLoader {
 
     /**
      * Parses the JSON or YAML string into a JsonNode.
+     *
      * @param data JSON or YAML string to parse into a JsonNode.
-     * @return
      */
     public JsonNode parse(String data) throws JsonLoadingException {
         try {
             return this.parse(this.getParser(data));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new JsonLoadingException(
-                "Failed parsing JSON/YAML data from string '" + data + '"', e
+                    "Failed parsing JSON/YAML data from string '" + data + '"', e
             );
         }
     }
@@ -93,9 +87,6 @@ public class JsonLoader {
     /**
      * Convenience method to reuse our ObjectMapper to serialize a JsonNode
      * to a JSON String.
-     * @param jsonNode
-     * @return
-     * @throws JsonProcessingException
      */
     public String asString(JsonNode jsonNode) throws JsonProcessingException {
         return objectMapper.writeValueAsString(jsonNode);
@@ -106,9 +97,7 @@ public class JsonLoader {
     }
 
     /**
-     * Gets either a YAMLParser or a JsonParser for String data
-     * @param data
-     * @return
+     * Gets either a YAMLParser or a JsonParser for String data.
      */
     private JsonParser getParser(String data) throws IOException {
         // If the first character is { or [, assume this is
@@ -123,9 +112,7 @@ public class JsonLoader {
     }
 
     /**
-     * Gets either a YAMLParser or a JsonParser for the data at uri
-     * @param uri
-     * @return
+     * Gets either a YAMLParser or a JsonParser for the data at uri.
      */
     private JsonParser getParser(URI uri) throws IOException {
         String content = IOUtils.toString(uri.toURL(), "UTF-8");

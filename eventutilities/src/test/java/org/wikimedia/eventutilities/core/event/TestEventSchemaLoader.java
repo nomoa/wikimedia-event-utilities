@@ -138,7 +138,7 @@ public class TestEventSchemaLoader {
     public void getPossibleLatestEventSchemaUrls() throws URISyntaxException {
         List<URI> expectedSchemaUris = new ArrayList<>();
         for (String baseUri: schemaBaseUris) {
-            expectedSchemaUris.add(new URI( baseUri + "/latest"));
+            expectedSchemaUris.add(new URI(baseUri + "/latest"));
         }
 
         List<URI> testSchemaUris = schemaLoader.getPossibleLatestSchemaUrls(testEvent);

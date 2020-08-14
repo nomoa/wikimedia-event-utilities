@@ -17,7 +17,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 /**
  * Contains static methods that simplify making HTTP POST requests.
  */
-public class HttpRequest {
+public final class HttpRequest {
+
+    private HttpRequest() {
+        // utility class, should never be constructed
+    }
 
     /**
      * POSTs a String to a url.
@@ -31,6 +35,7 @@ public class HttpRequest {
      * @param isSuccess
      * @return
      */
+    @SuppressWarnings("checkstyle:IllegalCatch") // FIXME: exception handling should be less generic
     public static HttpResult post(
         String url,
         String requestBody,

@@ -29,25 +29,21 @@ public class TestEventStreamConfig {
     private ObjectNode testStreamConfigsContent;
 
     @BeforeEach
-    public void setUp() throws RuntimeException {
+    public void setUp() throws JsonLoadingException {
         streamConfigs = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile);
 
-        try {
-            // Read this in for test assertions
-            testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(
-                URI.create(testStreamConfigsFile)
-            );
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(e);
-        }
+        // Read this in for test assertions
+        testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(
+            URI.create(testStreamConfigsFile)
+        );
     }
 
     @Test
     public void cachedStreamConfigs() {
         JsonNode configs = streamConfigs.cachedStreamConfigs();
         assertEquals(
-            testStreamConfigsContent, configs, "Should read and return all stream configs"
-                );
+                testStreamConfigsContent, configs, "Should read and return all stream configs"
+        );
     }
 
     @Test
@@ -166,7 +162,7 @@ public class TestEventStreamConfig {
 
     @Test
     public void collectAllCachedSettings() {
-        List<JsonNode> settingValues = streamConfigs.collectAllCachedSettings( "topics");
+        List<JsonNode> settingValues = streamConfigs.collectAllCachedSettings("topics");
 
         List<JsonNode> expected = Arrays.asList(
             JsonNodeFactory.instance.textNode("/^(eqiad\\.|codfw\\.)mediawiki\\.job\\..+/"),

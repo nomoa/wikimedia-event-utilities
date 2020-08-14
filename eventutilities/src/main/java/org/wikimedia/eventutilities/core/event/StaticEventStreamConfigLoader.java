@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class StaticEventStreamConfigLoader  extends EventStreamConfigLoader {
     protected URI streamConfigUri;
-    protected ObjectNode staticStreamConfigs = null;
+    protected ObjectNode staticStreamConfigs;
 
     public StaticEventStreamConfigLoader(String streamConfigUri) {
         this.streamConfigUri = URI.create(streamConfigUri);

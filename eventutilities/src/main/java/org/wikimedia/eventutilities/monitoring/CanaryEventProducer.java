@@ -46,8 +46,6 @@ public class CanaryEventProducer {
     /**
      * Constructs a new instance of CanaryEventProducer with a new instance of EventStreamFactory
      * from eventSchemaLoader and eventStreamConfig.
-     * @param eventSchemaLoader
-     * @param eventStreamConfig
      */
     public CanaryEventProducer(
         EventSchemaLoader eventSchemaLoader,
@@ -57,8 +55,7 @@ public class CanaryEventProducer {
     }
 
     /**
-     * Constructs a new CanaryEventProducer using the provided EventStreamFactory
-     * @param eventStreamFactory
+     * Constructs a new CanaryEventProducer using the provided EventStreamFactory.
      */
     public CanaryEventProducer(EventStreamFactory eventStreamFactory) {
         this.eventStreamFactory = eventStreamFactory;
@@ -66,7 +63,6 @@ public class CanaryEventProducer {
 
     /**
      * Returns the EventStreamFactory this CanaryEventProducer is using.
-     * @return
      */
     public EventStreamFactory getEventStreamFactory() {
         return eventStreamFactory;
@@ -75,7 +71,6 @@ public class CanaryEventProducer {
 
     /**
      * Given a streamName, gets its schema and uses the JSONSchema examples to make a canary event.
-     * @return
      */
     public ObjectNode canaryEvent(String streamName) {
         return canaryEvent(eventStreamFactory.createEventStream(streamName));
@@ -83,7 +78,6 @@ public class CanaryEventProducer {
 
     /**
      * Given an EventStream, gets its schema and uses the JSONSchema examples to make a canary event.
-     * @return
      */
     public ObjectNode canaryEvent(EventStream es) {
         return makeCanaryEvent(
@@ -94,9 +88,6 @@ public class CanaryEventProducer {
 
     /**
      * Creates a canary event from an example event for a stream.
-     * @param streamName
-     * @param example
-     * @return
      */
     protected static ObjectNode makeCanaryEvent(String streamName, ObjectNode example) {
         if (example == null) {
@@ -118,7 +109,6 @@ public class CanaryEventProducer {
     /**
      * Gets canary events to POST for all streams that EventStreamConfig knows about.
      * Refer to docs for getCanaryEventToPost(streamNames).
-     * @return
      */
     public Map<URI, List<ObjectNode>> getAllCanaryEventsToPost() {
         return getCanaryEventsToPost(
@@ -129,7 +119,6 @@ public class CanaryEventProducer {
     /**
      * Gets canary events to POST for a single stream.
      * Refer to docs for getCanaryEventToPost(streamNames).
-     * @return
      */
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(String streamName) {
         return getCanaryEventsToPost(Collections.singletonList(streamName));
@@ -137,13 +126,10 @@ public class CanaryEventProducer {
 
     /**
      * Given a list of streams, this will return a map of
-     * datcenter specific event service URIs to a list of canary
+     * datacenter specific event service URIs to a list of canary
      * events that should be POSTed to that event service.
      * These can then be iterated through and posted to each
      * event service URI to post expected canary events for each stream.
-     *
-     * @param streamNames
-     * @return
      */
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(List<String> streamNames) {
         List<EventStream> eventStreams = eventStreamFactory.createEventStreams(streamNames);
@@ -172,8 +158,8 @@ public class CanaryEventProducer {
 
     /**
      * POSTs canary events for all known streams.
+     *
      * Refer to docs for postCanaryEVents(streamNames).
-     * @return
      */
     public Map<URI, HttpResult> postAllCanaryEvents() {
         return postCanaryEvents(
@@ -184,8 +170,6 @@ public class CanaryEventProducer {
     /**
      * Posts canary events for a single stream.
      * Refer to docs for postCanaryEVents(streamNames).
-     * @param stream
-     * @return
      */
     public Map<URI, HttpResult> postCanaryEvents(String stream) {
         return postCanaryEvents(Collections.singletonList(stream));
@@ -200,9 +184,6 @@ public class CanaryEventProducer {
      * when an error is encountered.  This is why the results are collected in
      * this way  The results should be examined after this method returns
      * to check for any failures.
-     *
-     * @param streams
-     * @return
      */
     public Map<URI, HttpResult> postCanaryEvents(List<String> streams) {
         return getCanaryEventsToPost(streams).entrySet().stream()
@@ -233,10 +214,6 @@ public class CanaryEventProducer {
      * for the failure will be in message and body.
      * If there is a local exception during POSTing, success will be false
      * and the Exception message will be in message.
-     *
-     * @param eventServiceUri
-     * @param events
-     * @return
      */
     public static HttpResult postEvents(URI eventServiceUri, List<ObjectNode> events) {
         // Convert List of events to ArrayNode of events to allow
