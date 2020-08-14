@@ -2,7 +2,6 @@ package org.wikimedia.eventutilities.monitoring;
 
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Uses an EventStreamFactory to create and POST Wikimedia canary events to
@@ -35,7 +35,7 @@ public class CanaryEventProducer {
     /**
      * List of data center names that will be used to look up event service urls.
      */
-    protected static final List<String> DATACENTERS = Arrays.asList("eqiad", "codfw");
+    protected static final List<String> DATACENTERS = ImmutableList.of("eqiad", "codfw");
 
     /**
      * Will be used as the value of meta.domain when building canary events.
@@ -233,7 +233,7 @@ public class CanaryEventProducer {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(
                 "Encountered JsonProcessingException when attempting to POST canary events to " +
-                    eventServiceUri + ". " + e.getMessage()
+                    eventServiceUri + ". " + e.getMessage(), e
             );
         }
     }

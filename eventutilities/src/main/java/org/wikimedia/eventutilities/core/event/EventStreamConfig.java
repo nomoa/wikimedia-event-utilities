@@ -2,8 +2,8 @@ package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
@@ -41,7 +41,7 @@ public class EventStreamConfig {
     /**
      * Maps event service name to a service URL.
      */
-    protected HashMap<String, URI> eventServiceToUriMap;
+    protected Map<String, URI> eventServiceToUriMap;
 
     /**
      * Used to load stream config at instantiation and on demand.
@@ -60,7 +60,7 @@ public class EventStreamConfig {
      */
     public EventStreamConfig(
         EventStreamConfigLoader eventStreamConfigLoader,
-        HashMap<String, URI> eventServiceToUriMap
+        Map<String, URI> eventServiceToUriMap
     ) {
         this.eventStreamConfigLoader = eventStreamConfigLoader;
         this.eventServiceToUriMap = eventServiceToUriMap;
@@ -75,7 +75,7 @@ public class EventStreamConfig {
      * Re-fetches the content for all stream configs and saves it in the local
      * stream configs cache.  This should fetch and cache all stream configs.
      */
-    public void reset() {
+    public final void reset() {
         streamConfigsCache = eventStreamConfigLoader.load();
     }
 
@@ -412,7 +412,7 @@ public class EventStreamConfig {
      * @param jsonNodes
      * @return
      */
-    protected static List<String> jsonNodesAsText(List<JsonNode> jsonNodes) {
+    protected static List<String> jsonNodesAsText(Collection<JsonNode> jsonNodes) {
         return jsonNodes.stream()
             .map(JsonNode::asText)
             .collect(Collectors.toList());

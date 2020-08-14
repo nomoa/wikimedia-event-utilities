@@ -1,5 +1,7 @@
 package org.wikimedia.eventutilities.core.event;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.List;
@@ -50,12 +52,12 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
             // java.lang.IllegalArgumentException: Illegal character
             // if we don't URL encode "|" first.
             mediawikiStreamsDelimiter = URLEncoder.encode(
-                "|", "UTF-8"
+                "|", UTF_8.name()
             );
         } catch (java.io.UnsupportedEncodingException e) {
             // This should never happen.
             throw new RuntimeException(
-                "Could not URL encode '|'. " + e.getMessage()
+                "Could not URL encode '|'. " + e.getMessage(), e
             );
         }
 

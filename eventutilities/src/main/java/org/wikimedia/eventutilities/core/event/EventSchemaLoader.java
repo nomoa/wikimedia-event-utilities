@@ -84,7 +84,7 @@ public class EventSchemaLoader {
      * @return the jsonschema at schemaURI.
      */
     public JsonNode load(URI schemaUri) throws JsonLoadingException {
-        log.debug("Loading event schema at " + schemaUri);
+        log.debug("Loading event schema at {}", schemaUri);
         return schemaLoader.load(schemaUri);
     }
 
@@ -137,7 +137,7 @@ public class EventSchemaLoader {
             return new URI(uriString);
         } catch (java.net.URISyntaxException e) {
             throw new RuntimeException(
-                    "Failed building new URI from " + uriString + ". " + e.getMessage()
+                    "Failed building new URI from " + uriString + ". " + e.getMessage(), e
             );
         }
     }

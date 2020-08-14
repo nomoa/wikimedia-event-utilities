@@ -1,8 +1,11 @@
 package org.wikimedia.eventutilities.core.event;
 
+import static org.wikimedia.eventutilities.core.event.EventStreamConfigFactory.EVENT_SERVICE_TO_URI_MAP_DEFAULT;
+
 import java.net.URI;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -56,7 +59,7 @@ public class EventStreamFactory {
     public static EventStreamFactory createMediawikiConfigEventStreamFactory(
         List<String> schemaBaseUris,
         String mediawikiApiEndpoint,
-        HashMap<String, URI> eventServiceToUriMap
+        Map<String, URI> eventServiceToUriMap
     ) {
         return new EventStreamFactory(
             schemaBaseUris,
@@ -106,7 +109,7 @@ public class EventStreamFactory {
     public static EventStreamFactory createStaticConfigEventStreamFactory(
         List<String> schemaBaseUris,
         String streamConfigsUriString,
-        HashMap<String, URI> eventServiceToUriMap
+        Map<String, URI> eventServiceToUriMap
     ) {
         return new EventStreamFactory(
             schemaBaseUris,
@@ -129,8 +132,8 @@ public class EventStreamFactory {
         return new EventStreamFactory(
             schemaBaseUris,
             EventStreamConfigFactory.createStaticEventStreamConfig(
-                streamConfigsUriString
-            )
+                streamConfigsUriString,
+                    EVENT_SERVICE_TO_URI_MAP_DEFAULT)
         );
     }
 
@@ -146,7 +149,7 @@ public class EventStreamFactory {
      * Returns a List of new EventStreams using eventSchemaLoader and
      * eventStreamConfig.
      */
-    public List<EventStream> createEventStreams(List<String> streamNames) {
+    public List<EventStream> createEventStreams(Collection<String> streamNames) {
         return streamNames.stream()
             .map(this::createEventStream)
             .collect(Collectors.toList());

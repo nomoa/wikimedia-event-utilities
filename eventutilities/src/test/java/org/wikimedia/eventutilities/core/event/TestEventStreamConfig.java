@@ -2,6 +2,7 @@ package org.wikimedia.eventutilities.core.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.wikimedia.eventutilities.core.event.EventStreamConfigFactory.EVENT_SERVICE_TO_URI_MAP_DEFAULT;
 
 import java.io.File;
 import java.net.URI;
@@ -30,7 +31,7 @@ public class TestEventStreamConfig {
 
     @BeforeEach
     public void setUp() throws JsonLoadingException {
-        streamConfigs = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile);
+        streamConfigs = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile, EVENT_SERVICE_TO_URI_MAP_DEFAULT);
 
         // Read this in for test assertions
         testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(

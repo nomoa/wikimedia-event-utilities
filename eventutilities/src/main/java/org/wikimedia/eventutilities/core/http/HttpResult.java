@@ -1,5 +1,7 @@
 package org.wikimedia.eventutilities.core.http;
 
+import static java.lang.Boolean.FALSE;
+
 import java.io.IOException;
 import java.util.function.IntFunction;
 
@@ -84,7 +86,7 @@ public class HttpResult {
      * @param e
      */
     HttpResult(Exception e) {
-        this.success = false;
+        this.success = FALSE;
         this.status = null;
         this.message = e.getMessage();
         this.body = null;

@@ -40,7 +40,7 @@ public class JsonLoader {
             return JsonLoader.getInstance().load(uri);
         } catch (JsonLoadingException e) {
             throw new RuntimeException(
-                "Failed loading JSON from " + uri + ". " + e.getMessage()
+                "Failed loading JSON from " + uri + ". " + e.getMessage(), e
             );
         }
     }

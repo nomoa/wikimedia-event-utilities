@@ -8,6 +8,7 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.wikimedia.eventutilities.core.event.EventStreamConfigFactory.EVENT_SERVICE_TO_URI_MAP_DEFAULT;
 
 import java.io.File;
 import java.net.URI;
@@ -59,7 +60,7 @@ public class TestCanaryEventProducer {
     @BeforeAll
     public static void setUp() throws JsonLoadingException {
         EventSchemaLoader eventSchemaLoader = new EventSchemaLoader(schemaBaseUris);
-        EventStreamConfig eventStreamConfig = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile);
+        EventStreamConfig eventStreamConfig = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile, EVENT_SERVICE_TO_URI_MAP_DEFAULT);
         EventStreamFactory eventStreamFactory = new EventStreamFactory(eventSchemaLoader, eventStreamConfig);
         canaryEventProducer = new CanaryEventProducer(eventStreamFactory);
 

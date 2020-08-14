@@ -129,7 +129,7 @@ public class EventStream {
             return eventSchemaLoader.getSchema(schemaUri);
         } catch (JsonLoadingException e) {
             throw new RuntimeException(
-                "Failed loading schema at " + schemaUri + ". " + e.getMessage()
+                "Failed loading schema at " + schemaUri + ". " + e.getMessage(), e
             );
         }
     }
