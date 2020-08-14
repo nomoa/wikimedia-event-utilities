@@ -1,7 +1,8 @@
 package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 

@@ -1,17 +1,18 @@
 package org.wikimedia.eventutilities.core.event;
 
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.databind.JsonNode;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 
-import java.net.URI;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.JsonPointer;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Class to load and cache JSONSchema JsonNodes from URIs and event data.

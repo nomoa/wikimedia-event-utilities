@@ -1,17 +1,22 @@
 package org.wikimedia.eventutilities.core.event;
 
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.jupiter.api.BeforeAll;
-import org.wikimedia.eventutilities.core.json.JsonLoader;
-import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 
 public class TestEventStream {

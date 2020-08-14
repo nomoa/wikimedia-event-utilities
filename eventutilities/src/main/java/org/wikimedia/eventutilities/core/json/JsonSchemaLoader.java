@@ -1,10 +1,10 @@
 package org.wikimedia.eventutilities.core.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.load.SchemaLoader;
-
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.core.load.SchemaLoader;
 
 /**
  * Singleton class to handle fetching JSON schemas from URIs,

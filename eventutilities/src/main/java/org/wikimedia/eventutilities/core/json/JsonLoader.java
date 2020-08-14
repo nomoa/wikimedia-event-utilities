@@ -1,16 +1,16 @@
 package org.wikimedia.eventutilities.core.json;
 
+import java.io.IOException;
+import java.net.URI;
+
+import org.apache.commons.io.IOUtils;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-import org.apache.commons.io.IOUtils;
-import java.io.IOException;
-import java.net.URI;
 
 public class JsonLoader {
 

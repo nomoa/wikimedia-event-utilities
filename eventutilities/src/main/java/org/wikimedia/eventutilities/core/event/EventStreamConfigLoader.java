@@ -1,8 +1,9 @@
 package org.wikimedia.eventutilities.core.event;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Collections;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Abstract class to load event stream config.

@@ -1,21 +1,25 @@
 package org.wikimedia.eventutilities.monitoring;
 
 
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
+import org.wikimedia.eventutilities.core.event.EventStream;
+import org.wikimedia.eventutilities.core.event.EventStreamConfig;
+import org.wikimedia.eventutilities.core.event.EventStreamFactory;
+import org.wikimedia.eventutilities.core.http.HttpRequest;
+import org.wikimedia.eventutilities.core.http.HttpResult;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.wikimedia.eventutilities.core.event.EventStreamFactory;
-import org.wikimedia.eventutilities.core.event.EventStream;
-import org.wikimedia.eventutilities.core.event.EventStreamConfig;
-import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
-import org.wikimedia.eventutilities.core.http.HttpRequest;
-import org.wikimedia.eventutilities.core.http.HttpResult;
-
-import java.net.URI;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Uses an EventStreamFactory to create and POST Wikimedia canary events to

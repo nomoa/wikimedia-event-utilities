@@ -1,12 +1,13 @@
 package org.wikimedia.eventutilities.core.event;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.wikimedia.eventutilities.core.json.JsonLoader;
-
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Locale;
+
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * EventStreamConfigLoader implementation that loads stream config

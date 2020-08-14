@@ -1,13 +1,12 @@
 package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
-
 import java.util.List;
+
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 /**
  * Represents a single event stream.  An event stream is a named continuous stream

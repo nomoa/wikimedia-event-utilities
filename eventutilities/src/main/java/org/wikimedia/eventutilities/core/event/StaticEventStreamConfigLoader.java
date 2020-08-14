@@ -1,10 +1,11 @@
 package org.wikimedia.eventutilities.core.event;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.wikimedia.eventutilities.core.json.JsonLoader;
-
 import java.net.URI;
 import java.util.List;
+
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Loads stream config once from a static URI.
