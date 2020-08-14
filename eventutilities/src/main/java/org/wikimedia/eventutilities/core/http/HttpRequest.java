@@ -46,6 +46,7 @@ public final class HttpRequest {
         HttpEntity stringEntity = new StringEntity(requestBody, contentType);
         httpPost.setEntity(stringEntity);
 
+        // FIXME: the HTTP client should not be created on each request, but should be a collaborator of this class
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             return client.execute(
                 httpPost,
@@ -91,6 +92,7 @@ public final class HttpRequest {
         JsonNode jsonNode,
         IntFunction<Boolean> isSuccess
     ) throws JsonProcessingException {
+        // FIXME: instead of creating a new String, this should stream the JSON serialization to an InputStreamEntity
         String requestBody = JsonLoader.getInstance().asString(jsonNode);
         return post(url, requestBody, ContentType.APPLICATION_JSON, isSuccess);
     }

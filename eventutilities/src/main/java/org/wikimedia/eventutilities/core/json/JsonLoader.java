@@ -116,6 +116,8 @@ public class JsonLoader {
      * Gets either a YAMLParser or a JsonParser for the data at uri.
      */
     private JsonParser getParser(URI uri) throws IOException {
+        // FIXME: this does an HTTP call implicitly. It might be nicer to share a single HTTPClient with the rest
+        //        of the code, and rely on a common configuration for error handling, retries, ...
         String content = Resources.toString(uri.toURL(), UTF_8);
         return this.getParser(content);
     }
