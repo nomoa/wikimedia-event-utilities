@@ -6,6 +6,7 @@ import org.wikimedia.eventutilities.core.json.JsonLoader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * EventStreamConfigLoader implementation that loads stream config
@@ -70,9 +71,11 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
             return URI.create(mediawikiEventStreamConfigUri);
         } else {
             // else format the URI to request specific stream names.
+
             String streamsParam = String.format(
-                mediawikiStreamsParamFormat,
-                String.join(mediawikiStreamsDelimiter, streamNames)
+                    Locale.ROOT,
+                    mediawikiStreamsParamFormat,
+                    String.join(mediawikiStreamsDelimiter, streamNames)
             );
 
             return URI.create(

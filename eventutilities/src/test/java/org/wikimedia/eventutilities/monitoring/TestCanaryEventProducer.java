@@ -3,6 +3,11 @@ package org.wikimedia.eventutilities.monitoring;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.Options;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -18,21 +23,23 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.*;
 import org.wikimedia.eventutilities.core.event.EventStreamConfigFactory;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
 import org.wikimedia.eventutilities.core.event.EventStreamConfig;
 import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.http.HttpResult;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCanaryEventProducer {
+
+    WireMockServer wireMockServer;
 
     private static String testStreamConfigsFile =
         "file://" + new File("src/test/resources/event_stream_configs.json")
@@ -47,66 +54,43 @@ public class TestCanaryEventProducer {
     private static JsonNode pageCreateSchema;
     private static JsonNode searchSatisfactionSchema;
 
-    private static HttpServer httpServer;
-    private static InetSocketAddress httpServerAddress;
-
-    private static HttpServer createTestHttpServer() throws IOException {
-        HttpServer httpServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-
-        httpServer.createContext("/v1/events", new HttpHandler() {
-            public String readString(HttpExchange exchange) throws IOException {
-                String body;
-                try (InputStream in = exchange.getRequestBody()) {
-                    body = IOUtils.toString(in, StandardCharsets.UTF_8);
-                }
-                return body;
-            }
-
-            public void handle(HttpExchange exchange) throws IOException {
-                String requestBody;
-                try (InputStream in = exchange.getRequestBody()) {
-                    requestBody = IOUtils.toString(in, StandardCharsets.UTF_8);
-                }
-
-                byte[] response = ("{\"success\": true, \"body\": " + requestBody + "}").getBytes();
-                // HTTP_CREATED is 201.
-                exchange.sendResponseHeaders(HttpURLConnection.HTTP_CREATED, response.length);
-                exchange.getResponseBody().write(response);
-                exchange.close();
-            }
-        });
-
-        return httpServer;
-    }
-
     @BeforeAll
-    public static void setUp() throws RuntimeException, IOException {
+    public static void setUp() throws RuntimeException, JsonLoadingException {
         EventSchemaLoader eventSchemaLoader = new EventSchemaLoader(schemaBaseUris);
         EventStreamConfig eventStreamConfig = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile);
         EventStreamFactory eventStreamFactory = new EventStreamFactory(eventSchemaLoader, eventStreamConfig);
         canaryEventProducer = new CanaryEventProducer(eventStreamFactory);
 
         // Read expected some data in for assertions
-        try {
-            pageCreateSchema = JsonLoader.getInstance().load(
-                URI.create(schemaBaseUris.get(0) + "/mediawiki/revision/create/latest")
-            );
-            searchSatisfactionSchema = JsonLoader.getInstance().load(
-                URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
-            );
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(e);
-        }
-
-        httpServer = createTestHttpServer();
-        httpServerAddress = httpServer.getAddress();
-
-        httpServer.start();
+        pageCreateSchema = JsonLoader.getInstance().load(
+            URI.create(schemaBaseUris.get(0) + "/mediawiki/revision/create/latest")
+        );
+        searchSatisfactionSchema = JsonLoader.getInstance().load(
+            URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
+        );
     }
 
-    @AfterAll
-    public static void tearDown() {
-        httpServer.stop(0);
+    @BeforeEach
+    public void startWireMock() {
+        Options options = new WireMockConfiguration()
+                .dynamicHttpsPort()
+                .extensions(new ResponseTemplateTransformer(false));
+        wireMockServer = new WireMockServer(options);
+        wireMockServer.start();
+
+        wireMockServer.stubFor(post(urlPathMatching("/v1/events.*"))
+                .willReturn(aResponse()
+                        // FIXME: it looks like we don't care about the body of the response for these tests
+                        //        we might want to remove this complexity
+                        .withBody("\"{\"success\": true, \"body\": \"{{request.body}}\"}\"")
+                        .withTransformers("response-template")
+                        .withStatus(HTTP_CREATED)
+                ));
+    }
+
+    @AfterEach
+    public void stopWireMock() {
+        wireMockServer.stop();
     }
 
     @Test
@@ -200,7 +184,8 @@ public class TestCanaryEventProducer {
         );
 
         URI url = URI.create(String.format(
-            "http://%s:%d/v1/events", httpServerAddress.getHostString(), httpServerAddress.getPort()
+                Locale.ROOT,
+                "http://localhost:%d/v1/events", wireMockServer.port()
         ));
 
         HttpResult result = CanaryEventProducer.postEvents(
@@ -217,7 +202,8 @@ public class TestCanaryEventProducer {
         );
 
         URI url = URI.create(String.format(
-            "http://%s:%d/bad_url", httpServerAddress.getHostString(), httpServerAddress.getPort()
+                Locale.ROOT,
+                "http://localhost:%d/bad_url", wireMockServer.port()
         ));
 
         HttpResult result = CanaryEventProducer.postEvents(

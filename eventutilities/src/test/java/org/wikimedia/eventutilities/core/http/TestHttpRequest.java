@@ -2,6 +2,10 @@ package org.wikimedia.eventutilities.core.http;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.Options;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -11,49 +15,39 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import com.sun.net.httpserver.HttpServer;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestHttpRequest {
 
-    private static HttpServer httpServer;
-    private static InetSocketAddress httpServerAddress;
+    private WireMockServer wireMockServer;
 
-    private static HttpServer createTestHttpServer() throws IOException {
-        HttpServer httpServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+    @BeforeEach
+    public void startWireMock() {
+        Options options = new WireMockConfiguration()
+                .dynamicPort()
+                .extensions(new ResponseTemplateTransformer(false));
+        wireMockServer = new WireMockServer(options);
+        wireMockServer.start();
 
-        httpServer.createContext("/test", exchange -> {
-            String requestBody;
-            try (InputStream in = exchange.getRequestBody()) {
-                requestBody = IOUtils.toString(in, StandardCharsets.UTF_8);
-            }
-
-            byte[] response = requestBody.getBytes();
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-        });
-
-        return httpServer;
+        wireMockServer.stubFor(post("/test")
+                .willReturn(aResponse()
+                        .withBody("{{request.body}}")
+                        .withTransformers("response-template")
+                ));
     }
 
-    @BeforeAll
-    public static void setUp() throws IOException {
-        httpServer = createTestHttpServer();
-        httpServerAddress = httpServer.getAddress();
-        httpServer.start();
-    }
-
-    @AfterAll
-    public static void tearDown() {
-        httpServer.stop(0);
+    @AfterEach
+    public void stopWireMock() {
+        wireMockServer.stop();
     }
 
     @Test
     public void postJson() throws JsonProcessingException {
-        String url = "http://" + httpServerAddress.getHostString() + ":" + httpServerAddress.getPort() + "/test";
+        String url = "http://localhost:" + wireMockServer.port() + "/test";
         HttpResult result = HttpRequest.postJson(
             url,
             JsonNodeFactory.instance.numberNode(1234)
@@ -66,7 +60,7 @@ public class TestHttpRequest {
 
     @Test
     public void postJsonHttpFailureResponse() throws JsonProcessingException {
-        String url = "http://" + httpServerAddress.getHostString() + ":" + httpServerAddress.getPort() + "/notfound";
+        String url = "http://localhost:" + wireMockServer.port() + "/notfound";
         HttpResult result = HttpRequest.postJson(
             url,
             JsonNodeFactory.instance.numberNode(1234)
