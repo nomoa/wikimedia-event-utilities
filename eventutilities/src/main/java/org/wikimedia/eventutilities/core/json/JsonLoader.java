@@ -1,9 +1,9 @@
 package org.wikimedia.eventutilities.core.json;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.IOException;
 import java.net.URI;
-
-import org.apache.commons.io.IOUtils;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.io.Resources;
 
 public class JsonLoader {
 
@@ -115,7 +116,7 @@ public class JsonLoader {
      * Gets either a YAMLParser or a JsonParser for the data at uri.
      */
     private JsonParser getParser(URI uri) throws IOException {
-        String content = IOUtils.toString(uri.toURL(), "UTF-8");
+        String content = Resources.toString(uri.toURL(), UTF_8);
         return this.getParser(content);
     }
 
