@@ -32,3 +32,8 @@ List<string> topics = revisionCreateStream.topics()
 # etc...
 
 ``` 
+
+## Misc
+
+This project is based on discovery-parent-pom. See its README for more details
+on the build process and static analysis.
