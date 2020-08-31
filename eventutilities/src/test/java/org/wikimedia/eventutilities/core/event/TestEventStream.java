@@ -1,7 +1,8 @@
 package org.wikimedia.eventutilities.core.event;
 
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.net.URI;
@@ -11,13 +12,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 
 public class TestEventStream {
 
@@ -49,24 +49,23 @@ public class TestEventStream {
         }};
 
 
-    private static final EventStreamFactory eventStreamFactory = EventStreamFactory.createStaticConfigEventStreamFactory(
-        schemaBaseUris,
-        testStreamConfigsFile,
-        eventServiceToUriMap
-    );
+    private static final EventStreamFactory eventStreamFactory = EventStreamFactory.builder()
+        .setEventSchemaLoader(schemaBaseUris)
+        .setEventStreamConfig(testStreamConfigsFile, eventServiceToUriMap)
+        .build();
 
-    private static JsonNode pageCreateSchema;
     private static JsonNode searchSatisfactionSchema;
 
     @BeforeAll
     public static void setUp() throws JsonLoadingException {
         // Read expected some data in for assertions
-        pageCreateSchema = JsonLoader.getInstance().load(
-            URI.create(schemaBaseUris.get(0) + "/mediawiki/revision/create/latest")
-        );
-        searchSatisfactionSchema = JsonLoader.getInstance().load(
-            URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
-        );
+        try {
+            searchSatisfactionSchema = JsonLoader.getInstance().load(
+                URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
+            );
+        } catch (JsonLoadingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -97,6 +96,40 @@ public class TestEventStream {
             eventStreams.get(1).streamName(),
             "Should create multiple EventStreams (2)"
         );
+    }
+
+    @Test
+    public void createEventStreamWithRegexName() {
+        String streamName = "/mediawiki\\.job\\..+/";
+        assertThrows(
+            RuntimeException.class, () -> eventStreamFactory.createEventStream(streamName),
+            "Should throw RuntimeException if attempt to create EventStream with regex stream name"
+        );
+    }
+
+    @Test
+    public void createAllCachedEventStreams() {
+        // /^mediawiki\\.job\\..+/ should not be included.
+        List<String> expectedStreamNames = Arrays.asList(
+            "mediawiki.page-create", "eventlogging_SearchSatisfaction", "no_settings"
+        );
+
+        List<EventStream> eventStreams = eventStreamFactory.createAllCachedEventStreams();
+
+        assertEquals(
+            expectedStreamNames.size(),
+            eventStreams.size(),
+            "Should create " + expectedStreamNames.size() + " streams"
+        );
+
+        for (String streamName : expectedStreamNames) {
+            EventStream eventStream = eventStreams.stream()
+                .filter((es) -> es.streamName() == streamName)
+                .findAny()
+                .orElse(null);
+
+            assertNotNull(eventStream, "Should create event stream " + streamName);
+        }
     }
 
     @Test
@@ -138,6 +171,16 @@ public class TestEventStream {
         URI eventServiceUrl = es.eventServiceUri("eqiad");
         URI expected = URI.create("https://eventgate-main.svc.eqiad.wmnet:4492/v1/events");
         assertEquals(expected, eventServiceUrl, "Should get event service datacenter URI for stream");
+    }
+
+    @Test
+    public void schemaTitle() {
+        EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
+        String schemaTitle = es.schemaTitle();
+        String expected = "mediawiki/revision/create";
+        assertEquals(
+            expected, schemaTitle, "Should get schema title"
+        );
     }
 
     @Test

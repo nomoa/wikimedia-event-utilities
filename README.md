@@ -16,12 +16,18 @@ List<String> schemaBaseUris = Arrays.asList(
     "https://schema.wikimedia.org/repositories/secondary/jsonschema"
 );
 
-# Make an EventStreamFactory that uses meta.wikimedia.org/w/api.php to get stream config.
-EventStreamFactory eventStreamFactory = createMediawikiConfigEventStreamFactory(schemaBaseUris);
+# Make an EventStreamFactory that uses meta.wikimedia.org/w/api.php to get stream config,
+# and a local config file to convert from event service name to event service URI.
+EventStreamFactory eventStreamFactory = EventStreamFactory.builder()
+    .setEventSchemaLoader(schemaBaseUris)
+    .setEventStreamConfig(
+        "https://meta.wikimedia.org/w/api.php?action=streamconfigs",
+        "file:///path/to/event_service_uri_config.yaml"
+    )
+    .build();
 
 # Instantiate a mediawiki.revision-create EventStream.
 EventStream revisionCreateStream = eventStreamFactory.createEventStream("mediawiki.revision-create");
-
 
 # Get the revision-create stream's JSONSchema
 ObjectNode revisionCreateSchema = revisionCreateStream.schema();

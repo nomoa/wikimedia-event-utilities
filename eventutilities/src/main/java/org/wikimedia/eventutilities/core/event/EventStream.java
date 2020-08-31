@@ -32,11 +32,18 @@ public class EventStream {
      */
     protected EventStreamConfig eventStreamConfig;
 
+    /**
+     * Consider using EventStreamFactory.createEventStream instead.
+     */
     public EventStream(
         String streamName,
         EventSchemaLoader eventSchemaLoader,
         EventStreamConfig eventStreamConfig
     ) {
+        if (streamName.startsWith("/")) {
+            throw new RuntimeException("EventStream name must not be a regex, was " + streamName);
+        }
+
         this.streamName = streamName;
         this.eventSchemaLoader = eventSchemaLoader;
         this.eventStreamConfig = eventStreamConfig;
@@ -89,7 +96,7 @@ public class EventStream {
      *
      * E.g. https://eventgate-main.svc.eqiad.wmnet/v1/events
      * This assumes that EventStreamConfig is configured locally here with a
-     * name to URI map of <event_service_name>-<datacenter>.  If it isn't, this will return null.
+     * name to URI map of event_service_name-datacenter.  If it isn't, this will return null.
      */
     public URI eventServiceUri(String datacenter) {
         return eventStreamConfig.getEventServiceUri(
@@ -97,19 +104,22 @@ public class EventStream {
         );
     }
 
+    public String schemaTitle() {
+        return eventStreamConfig.getSchemaTitle(streamName);
+    }
+
     /**
      * Builds a latest relative schema URI for stream based on WMF conventions.
      *
      * This expects that the stream's schema_title will easily map to
      * a schema URI namespace hierarchy in a schema repository.  E.g.
-     *   schema_title: my/cool/schema -> /my/cool/schema/latest
+     *   schema_title: my/cool/schema returns /my/cool/schema/latest
      */
     public URI schemaUri() {
-        String schemaTitle = eventStreamConfig.getSchemaTitle(streamName);
         // The final part of this URI (here latest) is the schema version.
         // It doesn't actually matter what version we put, since we'll be calling
         // EventSchemaLoader getLatestSchemaUri, and the version will be replaced anyway.
-        URI schemaUri = URI.create("/" + schemaTitle + "/latest");
+        URI schemaUri = URI.create("/" + schemaTitle() + "/latest");
         return eventSchemaLoader.getLatestSchemaUri(schemaUri);
     }
 
@@ -149,4 +159,7 @@ public class EventStream {
         }
     }
 
+    public String toString() {
+        return "EventStream(" + streamName + ") of schema " + schemaTitle();
+    }
 }

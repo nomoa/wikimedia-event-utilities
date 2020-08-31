@@ -1,14 +1,13 @@
 package org.wikimedia.eventutilities.monitoring;
 
-
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.wikimedia.eventutilities.core.event.EventStreamConfigFactory.EVENT_SERVICE_TO_URI_MAP_DEFAULT;
 
 import java.io.File;
 import java.net.URI;
@@ -21,17 +20,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
-import org.wikimedia.eventutilities.core.event.EventStreamConfig;
-import org.wikimedia.eventutilities.core.event.EventStreamConfigFactory;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
 import org.wikimedia.eventutilities.core.http.HttpResult;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -59,10 +55,11 @@ public class TestCanaryEventProducer {
 
     @BeforeAll
     public static void setUp() throws JsonLoadingException {
-        EventSchemaLoader eventSchemaLoader = new EventSchemaLoader(schemaBaseUris);
-        EventStreamConfig eventStreamConfig = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile, EVENT_SERVICE_TO_URI_MAP_DEFAULT);
-        EventStreamFactory eventStreamFactory = new EventStreamFactory(eventSchemaLoader, eventStreamConfig);
-        canaryEventProducer = new CanaryEventProducer(eventStreamFactory);
+        canaryEventProducer = new CanaryEventProducer(EventStreamFactory.builder()
+            .setEventSchemaLoader(schemaBaseUris)
+            .setEventStreamConfig(testStreamConfigsFile)
+            .build()
+        );
 
         // Read expected some data in for assertions
         pageCreateSchema = JsonLoader.getInstance().load(
@@ -112,6 +109,11 @@ public class TestCanaryEventProducer {
             "eventlogging_SearchSatisfaction",
             canaryEvent.get("meta").get("stream").asText(),
             "Should set meta.stream in canary event"
+        );
+
+        assertNull(
+            canaryEvent.get("meta").get("dt"),
+            "Should unset meta.dt in canary event"
         );
     }
 

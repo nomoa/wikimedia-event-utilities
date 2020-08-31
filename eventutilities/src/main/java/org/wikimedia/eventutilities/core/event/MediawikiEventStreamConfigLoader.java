@@ -23,6 +23,25 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
     protected String mediawikiApiEndpoint;
 
     /**
+     * Default Mediawiki API endpoint used to construct MediawikiEventStreamConfigLoader.
+     */
+    private static final String MEDIAWIKI_API_ENDPOINT_DEFAULT =
+        "https://meta.wikimedia.org/w/api.php";
+
+
+    /**
+     * Key into the EventStreamConfig API response in which stream configs are located.
+     */
+    protected static final String RESPONSE_STREAMS_KEY = "streams";
+
+    /**
+     * Constructs a MediawikiEventStreamConfigLoader that loads from mediawikiApiEndpoint.
+     */
+    public MediawikiEventStreamConfigLoader() {
+        this(MEDIAWIKI_API_ENDPOINT_DEFAULT);
+    }
+
+    /**
      * Constructs a MediawikiEventStreamConfigLoader that loads from mediawikiApiEndpoint.
      */
     public MediawikiEventStreamConfigLoader(String mediawikiApiEndpoint) {
@@ -34,7 +53,7 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
      */
     public ObjectNode load(List<String> streamNames) {
         URI uri = makeMediawikiEventStreamConfigApiUri(mediawikiApiEndpoint, streamNames);
-        return (ObjectNode) JsonLoader.get(uri);
+        return (ObjectNode) JsonLoader.get(uri).get("streams");
     }
 
     /**

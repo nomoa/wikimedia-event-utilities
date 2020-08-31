@@ -1,0 +1,15 @@
+eventgate-main: https://eventgate-main.example.org:4492/v1/events
+eventgate-main-eqiad: https://eventgate-main.svc.eqiad.example.org:4492/v1/events
+eventgate-main-codfw: https://eventgate-main.svc.codfw.example.org:4492/v1/events
+
+eventgate-analytics: https://eventgate-analytics.example.org:4592/v1/events
+eventgate-analytics-eqiad: https://eventgate-analytics.svc.eqiad.example.org:4592/v1/events
+eventgate-analytics-codfw: https://eventgate-analytics.svc.codfw.example.org:4592/v1/events
+
+eventgate-analytics-external: https://eventgate-analytics-external.example.org:4692/v1/events
+eventgate-analytics-external-eqiad: https://eventgate-analytics-external.svc.eqiad.example.org:4692/v1/events
+eventgate-analytics-external-codfw: https://eventgate-analytics-external.svc.codfw.example.org:4692/v1/events
+
+eventgate-logging-external: https://eventgate-logging-external.example.org:4392/v1/events
+eventgate-logging-external-eqiad: https://eventgate-logging-external.svc.eqiad.example.org:4392/v1/events
+eventgate-logging-external-codfw: https://eventgate-logging-external.svc.codfw.example.org:4392/v1/events

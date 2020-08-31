@@ -43,12 +43,6 @@ public class HttpResult {
      */
     protected Exception exception;
 
-    /**
-     * @param success
-     * @param status
-     * @param message
-     * @param body
-     */
     HttpResult(boolean success, int status, String message, String body) {
         this.success = success;
         this.status = status;
@@ -61,9 +55,6 @@ public class HttpResult {
      * Constructs an HttpResult from an httpcomponents HttpResponse and a lambda
      * isSuccess that determines what http response status codes constitute a successful
      * response.
-     * @param response
-     * @param isSuccess
-     * @throws IOException
      */
     HttpResult(HttpResponse response, IntFunction<Boolean> isSuccess) throws IOException {
         this.status = response.getStatusLine().getStatusCode();
@@ -83,7 +74,6 @@ public class HttpResult {
     /**
      * Constructs a failure HttpResult representing a failure due to
      * a local Exception rather than an HTTP response error status code.
-     * @param e
      */
     HttpResult(Exception e) {
         this.success = FALSE;
@@ -115,9 +105,31 @@ public class HttpResult {
 
     /**
      * Returns true if this result represents a failure due to a local Exception.
-     * @return
      */
     public boolean causedByException() {
         return exception != null;
+    }
+
+    public String toString() {
+
+        String repr = "HttpResult";
+
+        if (this.success) {
+            repr += "(success) ";
+        } else {
+            repr += "(failure) ";
+        }
+
+        if (causedByException()) {
+            repr += " encountered local exception: " + this.message;
+        } else {
+            repr += " status: " + this.status + " message: " + this.message + ".";
+        }
+
+        if (this.body != null) {
+            repr += " body: " + this.body;
+        }
+
+        return repr;
     }
 }

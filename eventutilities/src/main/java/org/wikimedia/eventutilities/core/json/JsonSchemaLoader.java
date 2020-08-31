@@ -39,7 +39,6 @@ public class JsonSchemaLoader {
      * parse it into a JsonNode.  $refs will be resolved.
      * The compiled schema will be cached by schemaURI, and only looked up once per schemaURI.
      *
-     * @param schemaUri
      * @return the jsonschema at schemaURI.
      */
     public JsonNode load(URI schemaUri) throws JsonLoadingException {
@@ -57,7 +56,6 @@ public class JsonSchemaLoader {
     /**
      * Parses the JSON or YAML string into a JsonNode.
      * @param data JSON or YAML string to parse into a JsonNode.
-     * @return
      */
     public JsonNode parse(String data) throws JsonLoadingException {
         return JsonLoader.getInstance().parse(data);
@@ -65,8 +63,6 @@ public class JsonSchemaLoader {
 
     /**
      * Proxy method to see if the schemaUri is currently cached.
-     * @param schemaUri
-     * @return
      */
     public boolean isCached(URI schemaUri) {
         return this.cache.containsKey(schemaUri);
@@ -74,8 +70,6 @@ public class JsonSchemaLoader {
 
     /**
      * Proxy method to get a schema by schemaUri directly from the local cache.
-     * @param schemaUri
-     * @return
      */
     public JsonNode cacheGet(URI schemaUri) {
         return this.cache.get(schemaUri);
@@ -83,9 +77,6 @@ public class JsonSchemaLoader {
 
     /**
      * Proxy method to put a schema by schemaUri direclty in the local cache.
-     * @param schemaUri
-     * @param schema
-     * @return
      */
     public JsonNode cachePut(URI schemaUri, JsonNode schema) {
         return this.cache.put(schemaUri, schema);

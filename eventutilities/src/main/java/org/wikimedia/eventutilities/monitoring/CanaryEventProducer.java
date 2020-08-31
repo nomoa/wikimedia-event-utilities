@@ -23,7 +23,11 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Uses an EventStreamFactory to create and POST Wikimedia canary events to
- * Wikimedia event services.
+ * Wikimedia event services.  Canary events are constructed from the first entry in the
+ * event schema's examples field.  It is expected that event schemas have the fields listed
+ * at https://wikitech.wikimedia.org/wiki/Event_Platform/Schemas/Guidelines#Required_fields, and
+ * also that the receiving event intake service (e.g. EventGate) will set meta.dt if it is
+ * not present in the event.
  */
 public class CanaryEventProducer {
 
@@ -51,7 +55,12 @@ public class CanaryEventProducer {
         EventSchemaLoader eventSchemaLoader,
         EventStreamConfig eventStreamConfig
     ) {
-        this(new EventStreamFactory(eventSchemaLoader, eventStreamConfig));
+        this(
+            EventStreamFactory.builder()
+                .setEventSchemaLoader(eventSchemaLoader)
+                .setEventStreamConfig(eventStreamConfig)
+                .build()
+        );
     }
 
     /**
@@ -108,7 +117,7 @@ public class CanaryEventProducer {
 
     /**
      * Gets canary events to POST for all streams that EventStreamConfig knows about.
-     * Refer to docs for getCanaryEventToPost(streamNames).
+     * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
     public Map<URI, List<ObjectNode>> getAllCanaryEventsToPost() {
         return getCanaryEventsToPost(
@@ -118,10 +127,18 @@ public class CanaryEventProducer {
 
     /**
      * Gets canary events to POST for a single stream.
-     * Refer to docs for getCanaryEventToPost(streamNames).
+     * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(String streamName) {
         return getCanaryEventsToPost(Collections.singletonList(streamName));
+    }
+
+    /**
+     * Gets canary events to POST for a List of stream names.
+     * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
+     */
+    public Map<URI, List<ObjectNode>> getCanaryEventsToPost(List<String> streamNames) {
+        return getCanaryEventsToPostForStreams(eventStreamFactory.createEventStreams(streamNames));
     }
 
     /**
@@ -131,9 +148,9 @@ public class CanaryEventProducer {
      * These can then be iterated through and posted to each
      * event service URI to post expected canary events for each stream.
      */
-    public Map<URI, List<ObjectNode>> getCanaryEventsToPost(List<String> streamNames) {
-        List<EventStream> eventStreams = eventStreamFactory.createEventStreams(streamNames);
-
+    public Map<URI, List<ObjectNode>> getCanaryEventsToPostForStreams(
+        List<EventStream> eventStreams
+    ) {
         // Build a map of datacenter specific event service url to EventStreams
         Map<URI, List<EventStream>> eventStreamsByEventServiceUrl = new HashMap<>();
         for (String datacenter : DATACENTERS) {
@@ -156,10 +173,13 @@ public class CanaryEventProducer {
             ));
     }
 
+
+
     /**
      * POSTs canary events for all known streams.
      *
      * Refer to docs for postCanaryEVents(streamNames).
+     * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
     public Map<URI, HttpResult> postAllCanaryEvents() {
         return postCanaryEvents(
@@ -168,25 +188,51 @@ public class CanaryEventProducer {
     }
 
     /**
-     * Posts canary events for a single stream.
-     * Refer to docs for postCanaryEVents(streamNames).
+     * Posts canary events for a single streamName.
+     * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
-    public Map<URI, HttpResult> postCanaryEvents(String stream) {
-        return postCanaryEvents(Collections.singletonList(stream));
+    public Map<URI, HttpResult> postCanaryEvents(String streamName) {
+        return postCanaryEvents(Collections.singletonList(streamName));
     }
 
     /**
-     * POSTs each List of canary events to the appropriate
-     * event service url, and collects the results of each POST
-     * into a Map of event service url -> result ObjectNode.
+     * Posts canary events for each named event stream.
+     * Refer to docs for postCanaryEventsForStreams(eventStreams).
+     */
+    public Map<URI, HttpResult> postCanaryEvents(List<String> streamNames) {
+        return postCanaryEventsForStreams(eventStreamFactory.createEventStreams(streamNames));
+    }
+
+    /**
+     * Gets canary events for each eventStream, POSTs them to the appropriate
+     * event service url(s), and collects the results of each POST
+     * into a Map of event service url to result ObjectNode.
      *
      * We want to attempt every POST we are supposed to do without bailing
      * when an error is encountered.  This is why the results are collected in
      * this way  The results should be examined after this method returns
      * to check for any failures.
      */
-    public Map<URI, HttpResult> postCanaryEvents(List<String> streams) {
-        return getCanaryEventsToPost(streams).entrySet().stream()
+    public Map<URI, HttpResult> postCanaryEventsForStreams(List<EventStream> eventStreams) {
+        return postEventsToUris(getCanaryEventsToPostForStreams(eventStreams));
+    }
+
+    /**
+     * Given a List of ObjectNodes, returns an ArrayNode of those ObjectNodes.
+     */
+    public static ArrayNode eventsToArrayNode(List<ObjectNode> events) {
+        ArrayNode eventsArray = JsonNodeFactory.instance.arrayNode();
+        for (ObjectNode event : events) {
+            eventsArray.add(event);
+        }
+        return eventsArray;
+    }
+
+    /**
+     * Iterates over the Map of URI to events and posts events to the URI.
+     */
+    public static Map<URI, HttpResult> postEventsToUris(Map<URI, List<ObjectNode>> uriToEvents) {
+        return uriToEvents.entrySet().stream()
             .collect(Collectors.toMap(
                 Map.Entry::getKey,
                 entry -> postEvents(entry.getKey(), entry.getValue())
@@ -203,25 +249,23 @@ public class CanaryEventProducer {
      * httpPostJson a custom isSuccess function to determine this.
      * https://github.com/wikimedia/eventgate/blob/master/spec.yaml#L72
      *
-     * The returned ObjectNode will look like:
-     * {
-     *     "success": true,
-     *     "status" 201,
-     *     "message": "HTTP response message",
-     *     "body": response body if any
+     * The returned HttpResult will look like:
+     *
+     *     success: true,
+     *     status 201,
+     *     message: "HTTP response message",
+     *     body: response body if any
      * }
      * If ANY events failed POSTing, success will be false, and the reasons
      * for the failure will be in message and body.
      * If there is a local exception during POSTing, success will be false
-     * and the Exception message will be in message.
+     * and the Exception message will be in message, and in the exception field
+     * will have the original Exception.
      */
     public static HttpResult postEvents(URI eventServiceUri, List<ObjectNode> events) {
         // Convert List of events to ArrayNode of events to allow
         // jackson to serialize them as an array of events.
-        ArrayNode eventsArray = JsonNodeFactory.instance.arrayNode();
-        for (ObjectNode event : events) {
-            eventsArray.add(event);
-        }
+        ArrayNode eventsArray = eventsToArrayNode(events);
 
         try {
             return HttpRequest.postJson(

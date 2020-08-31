@@ -2,7 +2,6 @@ package org.wikimedia.eventutilities.core.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.wikimedia.eventutilities.core.event.EventStreamConfigFactory.EVENT_SERVICE_TO_URI_MAP_DEFAULT;
 
 import java.io.File;
 import java.net.URI;
@@ -22,21 +21,31 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class TestEventStreamConfig {
 
-    private static String testStreamConfigsFile =
+    private static final String testStreamConfigsFile =
         "file://" + new File("src/test/resources/event_stream_configs.json")
+            .getAbsolutePath();
+    private static final String testEventServiceConfigFile =
+        "file://" + new File("src/test/resources/event_service_to_uri.yaml")
             .getAbsolutePath();
 
     private EventStreamConfig streamConfigs;
     private ObjectNode testStreamConfigsContent;
 
     @BeforeEach
-    public void setUp() throws JsonLoadingException {
-        streamConfigs = EventStreamConfigFactory.createStaticEventStreamConfig(testStreamConfigsFile, EVENT_SERVICE_TO_URI_MAP_DEFAULT);
+    public void setUp() {
+        streamConfigs = EventStreamConfig.builder()
+            .setEventStreamConfigLoader(testStreamConfigsFile)
+            .setEventServiceToUriMap(testEventServiceConfigFile)
+            .build();
 
-        // Read this in for test assertions
-        testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(
-            URI.create(testStreamConfigsFile)
-        );
+        try {
+            // Read this in for test assertions
+            testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(
+                URI.create(testStreamConfigsFile)
+            );
+        } catch (JsonLoadingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -185,5 +194,20 @@ public class TestEventStreamConfig {
             "eventlogging_SearchSatisfaction"
         );
         assertEquals(expected, settingValues, "Should collect all cached settings for all streams as a List of Strings");
+    }
+
+    @Test
+    public void eventServiceToUriMap() {
+        assertEquals(
+            URI.create("https://eventgate-analytics-external.example.org:4692/v1/events"),
+            streamConfigs.getEventServiceUri("eventlogging_SearchSatisfaction"),
+            "Should read main event service to URI map from config file"
+        );
+
+        assertEquals(
+            URI.create("https://eventgate-analytics-external.svc.eqiad.example.org:4692/v1/events"),
+            streamConfigs.getEventServiceUri("eventlogging_SearchSatisfaction", "eqiad"),
+            "Should read datacenter specific service to URI map from config file"
+        );
     }
 }

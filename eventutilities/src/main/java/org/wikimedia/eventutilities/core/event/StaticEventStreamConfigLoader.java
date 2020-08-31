@@ -15,7 +15,11 @@ public class StaticEventStreamConfigLoader  extends EventStreamConfigLoader {
     protected ObjectNode staticStreamConfigs;
 
     public StaticEventStreamConfigLoader(String streamConfigUri) {
-        this.streamConfigUri = URI.create(streamConfigUri);
+        this(URI.create(streamConfigUri));
+    }
+
+    public StaticEventStreamConfigLoader(URI streamConfigUri) {
+        this.streamConfigUri = streamConfigUri;
     }
 
     public ObjectNode load(List<String> streamNames) {

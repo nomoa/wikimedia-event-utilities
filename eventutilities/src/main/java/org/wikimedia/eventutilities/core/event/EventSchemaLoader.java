@@ -18,11 +18,11 @@ import com.fasterxml.jackson.databind.JsonNode;
  * Class to load and cache JSONSchema JsonNodes from URIs and event data.
  *
  * Usage:
- *
+ * <pre>
  * EventSchemaLoader schemaLoader = new EventSchemaLoader("file:///path/to/schemas");
  * // OR use multiple base URIs:
  * EventSchemaLoader schemaLoader = new EventSchemaLoader(
- *     new ArrayList<>(Arrays.asList(
+ *     Arrays.asList(
  *         "file:///path/to/schemas1",
  *         "http://schema.repo.org/path/to/schemas"
  *     ))
@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  *
  * // Load the JsonNode or JSON String event's JSONSchema at /$schema
  * schemaLoader.getEventSchema(event);
+ * </pre>
  */
 public class EventSchemaLoader {
 
@@ -173,7 +174,7 @@ public class EventSchemaLoader {
 
     /**
      * Converts the given schemaUri to a 'latest' schema URI.  E.g.
-     * /my/schema/1.0.0 -> /my/schema/latest
+     * "/my/schema/1.0.0" returns "/my/schema/latest".
      */
     public URI getLatestSchemaUri(URI schemaUri) {
         return schemaUri.resolve(LATEST_FILE_NAME);
@@ -181,7 +182,6 @@ public class EventSchemaLoader {
 
     /**
      * Extracts the event's schema URI and converts it to a latest schema URI.
-     * @param event
      * @return 'latest' version of this event's schema URI
      */
     public URI getLatestSchemaUri(JsonNode event) {

@@ -28,12 +28,6 @@ public final class HttpRequest {
      *
      * If there is a local exception during POSTing, the HttpResult success will be false
      * and the Exception message will be in message.
-     *
-     * @param url
-     * @param requestBody
-     * @param contentType,
-     * @param isSuccess
-     * @return
      */
     @SuppressWarnings("checkstyle:IllegalCatch") // FIXME: exception handling should be less generic
     public static HttpResult post(
@@ -60,11 +54,6 @@ public final class HttpRequest {
 
     /**
      * POSTs a request body to url considering any 2xx response a successful POST.
-     *
-     * @param url
-     * @param requestBody
-     * @param contentType
-     * @return
      */
     public static HttpResult post(
         String url,
@@ -81,11 +70,6 @@ public final class HttpRequest {
 
     /**
      * POSTs a JsonNode as a serialized JSON string to a url.
-     *
-     * @param url
-     * @param jsonNode,
-     * @param isSuccess
-     * @return
      */
     public static HttpResult postJson(
         String url,
@@ -100,11 +84,6 @@ public final class HttpRequest {
     /**
      * POSTs a JsonNode as a serialized JSON string to url
      * considering any 2xx response a successful POST.
-     *
-     * @param url
-     * @param jsonNode
-     * @return
-     * @throws JsonProcessingException
      */
     public static HttpResult postJson(
         String url,

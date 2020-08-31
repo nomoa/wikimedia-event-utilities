@@ -33,8 +33,6 @@ public class JsonLoader {
     /**
      * Static method that uses the JsonLoader singleton to load and parse JSON
      * content at a URI.
-     *
-     * @throws JsonLoadingException
      */
     public static JsonNode get(URI uri) {
         try {
@@ -91,6 +89,15 @@ public class JsonLoader {
      */
     public String asString(JsonNode jsonNode) throws JsonProcessingException {
         return objectMapper.writeValueAsString(jsonNode);
+    }
+
+    /**
+     * Convenience method to reuse our ObjectMapper to convert a JsonNode to a Java Class.
+     * See:
+     * https://fasterxml.github.io/jackson-databind/javadoc/2.10/com/fasterxml/jackson/databind/ObjectMapper.html#convertValue-java.lang.Object-java.lang.Class
+     */
+    public <T> T convertValue(JsonNode jsonNode, Class<T> t) throws JsonProcessingException {
+        return objectMapper.convertValue(jsonNode, t);
     }
 
     private JsonNode parse(JsonParser parser) throws IOException {

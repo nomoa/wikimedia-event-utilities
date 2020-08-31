@@ -14,15 +14,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public abstract class EventStreamConfigLoader {
     /**
      * Loads stream configs for the given stream names.
-     * @param streamNames
-     * @return
      */
     public abstract ObjectNode load(List<String> streamNames);
 
     /**
      * Loads stream configs for the given stream name.
-     * @param streamName
-     * @return
      */
     public ObjectNode load(String streamName) {
         return load(Collections.singletonList(streamName));
@@ -30,7 +26,6 @@ public abstract class EventStreamConfigLoader {
 
     /**
      * Loads stream configs for all streams.
-     * @return
      */
     public ObjectNode load() {
         return load(Collections.emptyList());
