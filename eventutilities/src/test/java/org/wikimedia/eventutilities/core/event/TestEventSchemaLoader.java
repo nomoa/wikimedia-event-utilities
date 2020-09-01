@@ -89,7 +89,7 @@ public class TestEventSchemaLoader {
     }
 
     @Test
-    public void lLoad() throws URISyntaxException, JsonLoadingException {
+    public void load() throws URISyntaxException, JsonLoadingException {
         URI testSchemaUri = new URI(schemaBaseUris.get(1) + "/test_event.schema.yaml");
         JsonNode testSchema = schemaLoader.load(testSchemaUri);
         assertEquals(
