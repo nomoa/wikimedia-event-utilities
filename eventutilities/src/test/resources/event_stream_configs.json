@@ -12,7 +12,8 @@
   "eventlogging_SearchSatisfaction": {
     "schema_title": "analytics/legacy/searchsatisfaction",
     "destination_event_service": "eventgate-analytics-external",
-    "topics": ["eventlogging_SearchSatisfaction"]
+    "topics": ["eventlogging_SearchSatisfaction"],
+    "canary_events_enabled": true
   },
   "no_settings": { }
 }

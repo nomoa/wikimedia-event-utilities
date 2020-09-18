@@ -133,6 +133,34 @@ public class TestEventStream {
     }
 
     @Test
+    public void createEventStreamsMatchingSettings() {
+        // /^mediawiki\\.job\\..+/ should not be included.
+        List<String> expectedStreamNames = Arrays.asList(
+            "eventlogging_SearchSatisfaction"
+        );
+
+        List<EventStream> eventStreams = eventStreamFactory.createEventStreamsMatchingSettings(
+            null,
+            Collections.singletonMap("canary_events_enabled", "true")
+        );
+
+        assertEquals(
+            expectedStreamNames.size(),
+            eventStreams.size(),
+            "Should create " + expectedStreamNames.size() + " streams"
+        );
+
+        for (String streamName : expectedStreamNames) {
+            EventStream eventStream = eventStreams.stream()
+                .filter((es) -> es.streamName() == streamName)
+                .findAny()
+                .orElse(null);
+
+            assertNotNull(eventStream, "Should match settings and create event " + streamName);
+        }
+    }
+
+    @Test
     public void streamName() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         String expected = "mediawiki.page-create";
