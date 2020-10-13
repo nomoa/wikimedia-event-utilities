@@ -1,9 +1,9 @@
 # Wikimedia Event Utilities
 
-Wikimedia Event Utilities is a java library for working with 
+Wikimedia Event Utilities is a java library for working with
 event streams as part of Wikimedia's Event Platform.  It uses
 JSONSchema repositories and stream configuration to help
-identify streams of events and their schemas. 
+identify streams of events and their schemas.
 
 ## Example
 
@@ -37,9 +37,18 @@ List<string> topics = revisionCreateStream.topics()
 
 # etc...
 
-``` 
+```
 
 ## Misc
 
 This project is based on discovery-parent-pom. See its README for more details
 on the build process and static analysis.
+
+## Release Process
+
+WMF builds and releases wikimedia-event-utilities using Jenkins.
+A 'wikimedia-event-utilities-maven-release-docker' job has been configured and can be
+scheduled at https://integration.wikimedia.org/ci/job/wikimedia-event-utilities-maven-release-docker/build
+This will run the `mvn release:prepare` and `mvn release:perform` commands to bump the version number
+and upload artifacts to archiva.wikimedia.org.
+See also https://wikitech.wikimedia.org/wiki/Archiva
