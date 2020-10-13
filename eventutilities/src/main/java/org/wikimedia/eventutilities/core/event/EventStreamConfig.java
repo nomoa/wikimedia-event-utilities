@@ -1,5 +1,6 @@
 package org.wikimedia.eventutilities.core.event;
 
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import java.net.URI;
 
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -134,7 +136,6 @@ public class EventStreamConfig {
          * Returns a new EventStreamConfig.  If eventStreamConfigLoader or
          * eventServiceToUriMap are not yet set, defaults suitable for use in
          * WMF production will be used, as specified in WikimediaDefaults.
-         * @return
          */
         public EventStreamConfig build() {
             if (this.eventStreamConfigLoader == null) {
@@ -219,6 +220,47 @@ public class EventStreamConfig {
             ),
             false
         );
+    }
+
+    /**
+     * Filter stream configs for streamNames that match the settingsFilters.
+     * If streamNames is null, it is assumed you don't want to match on stream names,
+     * and only setttingsFilters will be considered.
+     *
+     * Since settingsFilters must all be strings, this only allows filtering
+     * on string stream config settings, or at least ones for which JsonNode.asText()
+     * returns something sane (which is true for most primitive types).
+     */
+    public ObjectNode filterStreamConfigs(
+        List<String> streamNames,
+        Map<String, String> settingsFilters
+    ) {
+        List<Map.Entry<String, JsonNode>> filteredEntries = fieldsStream()
+            .filter(entry -> {
+                String streamName = entry.getKey();
+                JsonNode settings = entry.getValue();
+
+                // If streamNames were given but this isn't one of our target streamNames,
+                // filter it out by returning false.
+                if (streamNames != null && !streamNames.contains(streamName)) {
+                    return false;
+                }
+
+                // Return true if all settingsFilters match for this streamConfigEntry.
+                return settingsFilters.entrySet().stream()
+                    .allMatch(targetSetting -> {
+                        JsonNode streamSettingValue = settings.get(targetSetting.getKey());
+                        return streamSettingValue != null && streamSettingValue.asText().equals(targetSetting.getValue());
+                    });
+            })
+            .collect(Collectors.toList());
+
+        // Rebuild an ObjectNode containing the matched stream configs.
+        ObjectNode filteredStreamConfigs = JsonNodeFactory.instance.objectNode();
+        for (Map.Entry<String, JsonNode> entry : filteredEntries) {
+            filteredStreamConfigs.put(entry.getKey(), entry.getValue());
+        }
+        return filteredStreamConfigs;
     }
 
     /**
@@ -390,6 +432,47 @@ public class EventStreamConfig {
     }
 
     /**
+     * Collect all settingName values for the list of specified streams
+     * with settings that match the provided settingsFilters.
+     * If streamNames null, it is assumed you don't want to match on stream names,
+     * and only setttingsFilters will be considered.
+     *
+     * Since settingsFilters must all be strings, this only allows filtering
+     * on string stream config settings, or at least ones for which JsonNode.asText()
+     * returns something sane (which is true for most primitive types).
+     */
+    public List<JsonNode> collectSettingMatchingSettings(
+        String settingName,
+        List<String> streamNames,
+        Map<String, String> settingsFilters
+    ) {
+        ObjectNode filteredStreamConfigs = filterStreamConfigs(streamNames, settingsFilters);
+        return objectNodeCollectValues(filteredStreamConfigs, settingName);
+    }
+
+    /**
+     * Collect all settingName values as Strings for the list of specified streams
+     * with settings that match the provided settingsFilters.
+     * If streamNames is null, it is assumed you don't want to match on stream names,
+     * and only setttingsFilters will be considered.
+     *
+     * Since settingsFilters must all be strings, this only allows filtering
+     * on string stream config settings, or at least ones for which JsonNode.asText()
+     * returns something sane (which is true for most primitive types).
+     */
+    public List<String> collectSettingMatchingSettingsAsString(
+        String settingName,
+        List<String> streamNames,
+        Map<String, String> settingsFilters
+    ) {
+        return jsonNodesAsText(collectSettingMatchingSettings(
+            settingName,
+            streamNames,
+            settingsFilters
+        ));
+    }
+
+    /**
      * Get all topics settings for the a single stream.
      */
     public String getSchemaTitle(String streamName) {
@@ -418,10 +501,58 @@ public class EventStreamConfig {
     }
 
     /**
+     * Get all topics settings for the list of specified streams
+     * with settings that match the provided settingsFiilters.
+     * If streamNames is null, it is assumed you don't want to match on stream names,
+     * and only setttingsFilters will be considered.
+     *
+     * Since settingsFilters must all be strings, this only allows filtering
+     * on string stream config settings, or at least ones for which JsonNode.asText()
+     * returns something sane (which is true for most primitive types).
+     */
+    public List<String> collectTopicsMatchingSettings(
+        List<String> streamNames,
+        Map<String, String> settingsFilters
+    ) {
+        return collectSettingMatchingSettingsAsString(
+            TOPICS_SETTING,
+            streamNames,
+            settingsFilters
+        );
+    }
+
+    /**
      * Gets the destination_event_service name for the specified stream.
      */
     public String getEventServiceName(String streamName) {
         return getSettingAsString(streamName, EVENT_SERVICE_SETTING);
+    }
+
+    /**
+     * Converts a list of strings to a regex that will match
+     * any of the strings.  If any of the strings looks like a regex,
+     * that is, it starts and ends with a "/" character, the "/" will be
+     * removed from the beginning and end of the string before joining into a regex.
+     *
+     * Example:
+     *   ("a", "/^b.+/", "c") returns "(a|^b.+|c)"
+     *
+     * Use this for converting a list of topics to a regex like:
+     *  EventStreamConfig.toRegex(
+     *      eventStreamConfig.getAllCachedTopics()
+     *  );
+     */
+    public static String toRegex(Collection<String> strings) {
+        List<String> stringsForRegex = strings.stream()
+            .map((s -> {
+                if (s.startsWith("/") && s.endsWith("/")) {
+                    return s.substring(1, s.length() - 1);
+                } else {
+                    return s;
+                }
+            }))
+            .collect(Collectors.toList());
+        return "(" + String.join("|", stringsForRegex) + ")";
     }
 
     /**

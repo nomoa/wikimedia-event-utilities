@@ -2,6 +2,7 @@ package org.wikimedia.eventutilities.core.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.net.URI;
@@ -9,15 +10,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
 
 public class TestEventStreamConfig {
 
@@ -197,6 +197,33 @@ public class TestEventStreamConfig {
     }
 
     @Test
+    public void collectTopicMatchingSettings() {
+        List<String> topics = streamConfigs.collectTopicsMatchingSettings(
+            Arrays.asList("mediawiki.page-create", "eventlogging_SearchSatisfaction"),
+            Collections.singletonMap("destination_event_service", "eventgate-main")
+        );
+
+        // /^mediawiki\\.job\\..+/ should not be included.
+        List<String> expectedTopics = Arrays.asList(
+            "eqiad.mediawiki.page-create",
+            "codfw.mediawiki.page-create"
+        );
+
+        assertEquals(
+            expectedTopics.size(),
+            topics.size(),
+            "Should collect " + expectedTopics.size() + " topics matching settings"
+        );
+
+        for (String expectedTopic : expectedTopics) {
+            assertTrue(
+                topics.contains(expectedTopic),
+                "Should collect topics matching settings and get topic " + expectedTopic
+            );
+        }
+    }
+
+    @Test
     public void eventServiceToUriMap() {
         assertEquals(
             URI.create("https://eventgate-analytics-external.example.org:4692/v1/events"),
@@ -209,5 +236,14 @@ public class TestEventStreamConfig {
             streamConfigs.getEventServiceUri("eventlogging_SearchSatisfaction", "eqiad"),
             "Should read datacenter specific service to URI map from config file"
         );
+    }
+
+    @Test
+    public void toRegex() {
+        List<String> strings = Arrays.asList("a", "/^b.+/", "c");
+        String expected = "(a|^b.+|c)";
+
+        String result = EventStreamConfig.toRegex(strings);
+        assertEquals(expected, result, "Should convert a list of strings to a single or-ed regex.");
     }
 }

@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Class to aide in constructing EventStream instances and
  * working with groups of event streams using
@@ -173,6 +175,36 @@ public class EventStreamFactory {
     public List<EventStream> createEventStreams(Collection<String> streamNames) {
         return streamNames.stream()
             .map(this::createEventStream)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Creates EventStreams for the list of specified streams
+     * with settings that match the provided settingsFilters.
+     * If streamNames is null, it is assumed you don't want to match on stream names,
+     * and only setttingsFilters will be considered.
+     *
+     * Since settingsFilters must all be strings, this only allows filtering
+     * on string stream config settings, or at least ones for which JsonNode.asText()
+     * returns something sane (which is true for most primitive types).
+     */
+    public List<EventStream> createEventStreamsMatchingSettings(
+        Collection<String> streamNames,
+        Map<String, String> settingsFilters
+    ) {
+        List<EventStream> eventStreams;
+        if (streamNames != null) {
+            eventStreams = createEventStreams(streamNames);
+        } else {
+            eventStreams = createAllCachedEventStreams();
+        }
+
+        return eventStreams.stream()
+            .filter(eventStream -> settingsFilters.entrySet().stream()
+                .allMatch(settingEntry -> {
+                    JsonNode streamSetting = eventStream.getSetting(settingEntry.getKey());
+                    return streamSetting != null && streamSetting.asText().equals(settingEntry.getValue());
+                }))
             .collect(Collectors.toList());
     }
 
