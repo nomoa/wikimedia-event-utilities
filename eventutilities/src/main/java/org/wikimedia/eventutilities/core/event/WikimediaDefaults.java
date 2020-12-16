@@ -21,7 +21,7 @@ public class WikimediaDefaults {
     /**
      * MediaWiki EventStreamConfig API used in WMF production to use to fetch stream configs.
      */
-    public static final String EVENT_STREAM_CONFIG_URI = "https://meta.wikimedia.org/api.php";
+    public static final String EVENT_STREAM_CONFIG_URI = "https://meta.wikimedia.org/w/api.php";
 
     /**
      * This default is suitable for using in WMF production networks, but

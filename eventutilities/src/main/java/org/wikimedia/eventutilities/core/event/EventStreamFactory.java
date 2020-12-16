@@ -56,7 +56,7 @@ public class EventStreamFactory {
      *  EventStreamFactory f = EventStreamFactory.builder()
      *      .setEventSchemaLoader(Arrays.asList("file:///path/to/schema/repo"))
      *      .setEventStreamConfig(
-     *          "https://meta.wikimedia.org/api.php",
+     *          "https://meta.wikimedia.org/w/api.php",
      *          "file:///path/to/event_service_map.yaml"
      *      )
      *      .build()

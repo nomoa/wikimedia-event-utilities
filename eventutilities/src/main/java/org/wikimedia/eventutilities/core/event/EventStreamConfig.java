@@ -94,7 +94,7 @@ public class EventStreamConfig {
      * EventStreamConfig instances.  Usage:
      *
      *  EventStreamConfig c = EventStreamConfig.builder()
-     *      .setEventStreamConfigLoader("https://meta.wikimedia.org/api.php")
+     *      .setEventStreamConfigLoader("https://meta.wikimedia.org/w/api.php")
      *      .setEventServiceToUriMap("file:///path/to/event_service_map.yaml")
      *      .build()
      */
