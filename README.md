@@ -7,7 +7,7 @@ identify streams of events and their schemas.
 
 ## Example
 
-Instantiate and use an EventStream using schema repo URLs and Mediawiki EventStreamConfig
+### Instantiate and use an EventStream using schema repo URLs and Mediawiki EventStreamConfig
 
 ```java
 import org.wikimedia.eventutilities.core.event.*;
@@ -16,8 +16,8 @@ List<String> schemaBaseUris = Arrays.asList(
     "https://schema.wikimedia.org/repositories/secondary/jsonschema"
 );
 
-# Make an EventStreamFactory that uses meta.wikimedia.org/w/api.php to get stream config,
-# and a local config file to convert from event service name to event service URI.
+// Make an EventStreamFactory that uses meta.wikimedia.org/w/api.php to get stream config,
+// and a local config file to convert from event service name to event service URI.
 EventStreamFactory eventStreamFactory = EventStreamFactory.builder()
     .setEventSchemaLoader(schemaBaseUris)
     .setEventStreamConfig(
@@ -26,17 +26,36 @@ EventStreamFactory eventStreamFactory = EventStreamFactory.builder()
     )
     .build();
 
-# Instantiate a mediawiki.revision-create EventStream.
+// Instantiate a mediawiki.revision-create EventStream.
 EventStream revisionCreateStream = eventStreamFactory.createEventStream("mediawiki.revision-create");
 
-# Get the revision-create stream's JSONSchema
+// Get the revision-create stream's JSONSchema
 ObjectNode revisionCreateSchema = revisionCreateStream.schema();
 
-# Get the topics that make up the revision-create stream
+// Get the topics that make up the revision-create stream
 List<string> topics = revisionCreateStream.topics()
 
-# etc...
+// etc...
 
+```
+
+### Validate an event against its schema
+```java
+import org.wikimedia.eventutilities.core.event.*;
+
+String eventData = "{\"$schema\": \"/someschema/1.0.0\", ...}";
+// Get the schema loader using WMF default repositories
+EventSchemaLoader loader = new EventSchemaLoader(WikimediaDefaults.SCHEMA_BASE_URIS);
+// Create the schema validator
+EventSchemaValidator validator = new EventSchemaValidator(loader);
+// validate and obtain the report, an exception is thrown if the event is not proper json
+// or if there is a problem finding/loading the schema
+ProcessingReport report = validator.validate(eventData);
+if (report.isSuccess()) {
+    logger.info("Event is valid");
+} else {
+    logger.error("Event is not valid: {}", report)
+}
 ```
 
 ## Misc

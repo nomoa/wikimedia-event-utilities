@@ -19,6 +19,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 public class TestEventSchemaLoader {
     private EventSchemaLoader schemaLoader;
@@ -31,6 +34,8 @@ public class TestEventSchemaLoader {
     private static final JsonNodeFactory jf = JsonNodeFactory.instance;
 
     private static final ObjectNode expectedTestSchema = jf.objectNode();
+    private static final JsonSchema expectedTestJsonSchema;
+
     private static final ObjectNode testEvent = jf.objectNode();
 
     static {
@@ -70,6 +75,11 @@ public class TestEventSchemaLoader {
         expectedTestSchema.put("type", "object");
         expectedTestSchema.set("properties", expectedTestSchemaProperties);
 
+        try {
+            expectedTestJsonSchema = JsonSchemaFactory.byDefault().getJsonSchema(expectedTestSchema);
+        } catch (ProcessingException e) {
+            throw new AssertionError(e);
+        }
 
         ObjectNode eventMeta = jf.objectNode();
         eventMeta.put("dt", "2019-01-01T00:00:00Z");
@@ -180,5 +190,14 @@ public class TestEventSchemaLoader {
         } catch (JsonLoadingException e) {
             // we should get here.
         }
+    }
+
+    @Test
+    public void testGetEventJsonSchema() throws ProcessingException, JsonLoadingException {
+        // JsonSchema does not implement hashCode/equals
+        // so we verify that the validation report of schemaLoader.getEventJsonSchema is similar
+        // to one produced by the JsonSchema we expect
+        assertEquals(schemaLoader.getEventJsonSchema(testEvent).validate(testEvent).toString(),
+                expectedTestJsonSchema.validate(testEvent).toString());
     }
 }

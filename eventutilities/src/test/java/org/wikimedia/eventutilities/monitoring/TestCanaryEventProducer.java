@@ -73,6 +73,7 @@ public class TestCanaryEventProducer {
     @BeforeEach
     public void startWireMock() {
         Options options = new WireMockConfiguration()
+                .dynamicPort()
                 .dynamicHttpsPort()
                 .extensions(new ResponseTemplateTransformer(false));
         wireMockServer = new WireMockServer(options);

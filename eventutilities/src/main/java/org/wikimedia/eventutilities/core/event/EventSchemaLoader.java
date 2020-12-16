@@ -13,6 +13,9 @@ import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 /**
  * Class to load and cache JSONSchema JsonNodes from URIs and event data.
@@ -43,6 +46,7 @@ public class EventSchemaLoader {
     protected final List<String> baseUris;
     protected final JsonPointer schemaFieldPointer;
     protected final JsonSchemaLoader schemaLoader = JsonSchemaLoader.getInstance();
+    private final JsonSchemaFactory jsonSchemaFactory;
 
     private static final Logger log = LogManager.getLogger(EventSchemaLoader.class.getName());
 
@@ -72,11 +76,22 @@ public class EventSchemaLoader {
 
     /**
      * Constructs a EventSchemaLoader that prefixes URIs with baseURI and
-     * extracts schema URIs from the schemaField in events.
+     * extracts schema URIs from the schemaField in events. And the default JsonSchemaFactory.
+     *
+     * @see JsonSchemaFactory#byDefault()
      */
     public EventSchemaLoader(List<String> baseUris, String schemaField) {
+        this(baseUris, schemaField, JsonSchemaFactory.byDefault());
+    }
+
+    /**
+     * Constructs a EventSchemaLoader that prefixes URIs with baseURI and
+     * extracts schema URIs from the schemaField in events.
+     */
+    public EventSchemaLoader(List<String> baseUris, String schemaField, JsonSchemaFactory schemaFactory) {
         this.baseUris = baseUris;
         this.schemaFieldPointer = JsonPointer.compile(schemaField);
+        this.jsonSchemaFactory = schemaFactory;
     }
 
     /**
@@ -249,6 +264,22 @@ public class EventSchemaLoader {
         return this.getEventSchema(event);
     }
 
+    /**
+     * Given a JSON event, get its schema URI,
+     * and load and return schema for the event as a JsonSchema (suited for validation).
+     */
+    public JsonSchema getEventJsonSchema(String eventString) throws ProcessingException, JsonLoadingException {
+        return this.getEventJsonSchema(this.schemaLoader.parse(eventString));
+    }
+
+    /**
+     * Given a JSON event, get its schema URI,
+     * and load and return schema for the event as a JsonSchema (suited for validation).
+     */
+    public JsonSchema getEventJsonSchema(JsonNode event) throws ProcessingException, JsonLoadingException {
+        JsonNode schemaAsJson = this.getEventSchema(event);
+        return jsonSchemaFactory.getJsonSchema(schemaAsJson);
+    }
 
     /**
      * Given an event object, this extracts its schema URI at schemaField
