@@ -58,6 +58,59 @@ if (report.isSuccess()) {
 }
 ```
 
+### Generate an event prior sending it to kafka
+JVM clients might prefer to ship events directly to kafka to avoid the extra
+hop through event-gate. To assist this use-case the utilities provide
+JsonEventGenerator that makes sure the event has the required fields:
+- `$schema` mandatory schema pointer
+- `dt` optional event time
+- `meta.dt` mandatory kafka-ingestion time
+- `meta.stream` mandatory stream name
+
+It also ensures the coherence of these fields by:
+- validating the resulting json event against its schema
+- ensuring that the stream provided matches the schema title given an EventStreamConfig
+
+Example:
+```
+EventStreamConfig streamConfig = EventStreamConfig.builder()
+        .setEventStreamConfigLoader(WikimediaDefaults.EVENT_STREAM_CONFIG_URI)
+        .build();
+JsonEventGenerator generator = JsonEventGenerator.builder()
+        .schemaLoader(new EventSchemaLoader(WikimediaDefaults.SCHEMA_BASE_URIS))
+        .eventStreamConfig(streamConfig)
+        .build();
+
+Consumer<ObjectNode> eventCreator = root -> {
+    root.put("my_field", "some data");
+};
+Instant eventTime = Instant.EPOCH;
+ObjectNode root = generator.generateEvent("my_stream", "my_schema/1.0.0", eventCreator, eventTime);
+byte[] eventData = generator.serializeAsBytes(root);
+// can send eventData to kafka
+```
+
+Some fields may be provided from the `eventCreator` Supplier, for instance to
+better control the `meta.dt` if the producer is willing to make sure the kafka
+timestamp matches `meta.dt`:
+```java
+Instant kafkaTimestamp = Instant.now();
+Instant eventTime = Instant.EPOCH;
+Consumer<ObjectNode> eventCreator = root -> {
+    ObjectNode meta = root.putObject(JsonEventGenerator.META_FIELD);
+    meta.put(JsonEventGenerator.META_INGESTION_TIME_FIELD, kafkaTimestamp.toString());
+    root.put("my_field", "some data");
+};
+ObjectNode root = generator.generateEvent("my_stream", "my_schema/1.0.0", eventCreator, eventTime);
+byte[] eventData = generator.serializeAsBytes(root);
+// can send eventData to kafka using kafkaTimestamp as the record timestamp
+```
+
+The field `$schema` and `meta.stream` will always be overridden by JsonEventGenerator and thus cannot be set from the
+`eventCreator` Supplier.
+
+NOTE the generator is thread-safe and should be reused as it is using an
+internal cache to speed-up some of the checks it is doing.
 ## Misc
 
 This project is based on discovery-parent-pom. See its README for more details
