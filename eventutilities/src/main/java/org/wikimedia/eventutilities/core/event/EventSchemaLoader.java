@@ -278,7 +278,14 @@ public class EventSchemaLoader {
      */
     public JsonSchema getEventJsonSchema(JsonNode event) throws ProcessingException, JsonLoadingException {
         JsonNode schemaAsJson = this.getEventSchema(event);
-        return jsonSchemaFactory.getJsonSchema(schemaAsJson);
+        return getJsonSchema(schemaAsJson);
+    }
+
+    /**
+     * Given a json schema parsed as a JsonNode materialize JsonSchema suited for validation.
+     */
+    public JsonSchema getJsonSchema(JsonNode schema) throws ProcessingException {
+        return jsonSchemaFactory.getJsonSchema(schema);
     }
 
     /**

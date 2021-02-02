@@ -1,0 +1,14 @@
+{
+  "main_stream": {
+    "schema_title": "test/event",
+    "stream": "main_stream",
+    "topic_prefixes": ["dc1", "dc2"],
+    "topics":["dc1.main_stream", "dc2.main_stream"]
+  },
+  "unrelated_stream": {
+    "schema_title": "unrelated/schema",
+    "stream": "unrelated_stream",
+    "topic_prefixes": ["dc1", "dc2"],
+    "topics":["dc1.unrelated_stream", "dc2.unrelated_stream"]
+  }
+}
