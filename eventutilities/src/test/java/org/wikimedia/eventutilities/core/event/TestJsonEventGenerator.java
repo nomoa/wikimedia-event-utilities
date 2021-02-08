@@ -141,6 +141,20 @@ public class TestJsonEventGenerator {
     }
 
     @Test
+    public void test_schema_allowed_for_stream() {
+        Consumer<ObjectNode> eventCreator = root -> {};
+        try {
+            generator.generateEvent("unrelated_stream", schema, eventCreator, null);
+        } catch (IllegalArgumentException iae) {
+            assertEquals("Schema [" + schema + "] with title " +
+                    "[test/event] does not match allowed titles for stream [unrelated_stream]," +
+                    " allowed titles are: [unrelated/schema]", iae.getMessage());
+            return;
+        }
+        throw new AssertionError();
+    }
+
+    @Test
     public void test_can_be_serialized_as_bytes() throws IOException {
         Consumer<ObjectNode> eventCreator = root -> {
             root.put("test", "some value");

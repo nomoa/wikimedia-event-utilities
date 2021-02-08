@@ -78,9 +78,25 @@ public final class JsonEventGenerator {
      * @throws IllegalArgumentException if the event is not valid against the provided schema
      */
     public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData, @Nullable Instant eventTime) {
-        ObjectNode root = jsonMapper.createObjectNode();
+        return generateEvent(stream, schema, eventData, eventTime, true);
+    }
+
+    /**
+     * Generates an json event calling the supplier eventData.
+     *
+     * @param stream the stream this event will be pushed to
+     * @param schema the schema this event is build against
+     * @param eventData consumer receiving an empty ObjectNode to attach data to
+     * @param eventTime the optional eventTime to be set to the dt field (might become mandatory)
+     * @param validate true to validate the event against its schema
+     * @throws IllegalArgumentException if the schema does not match what is expected from the stream configuration
+     * @throws IllegalArgumentException if the schema cannot be found/loaded
+     * @throws IllegalArgumentException if the event is not valid against the provided schema
+     */
+    public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData, @Nullable Instant eventTime, boolean validate) {
         Objects.requireNonNull(stream, "stream must not be null");
         Objects.requireNonNull(schema, "schema must not be null");
+        ObjectNode root = jsonMapper.createObjectNode();
 
         eventData.accept(root);
         // attach dt as eventTime if provided and not already set in the json object
@@ -182,7 +198,8 @@ public final class JsonEventGenerator {
         }
         if (!allowedTitles.contains(schemaTitle.textValue())) {
             throw new IllegalArgumentException("Schema [" + schemaName + "] with title " +
-                    "[" + schemaTitle + "] does not match allowed titles for stream " +
+                    "[" + schemaTitle.asText() + "] does not match allowed titles for stream " +
+                    "[" + stream + "], allowed titles are: " +
                     "[" + String.join(",", allowedTitles) + "]");
         }
     }
