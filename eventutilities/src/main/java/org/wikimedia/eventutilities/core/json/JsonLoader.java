@@ -56,13 +56,13 @@ public class JsonLoader {
         JsonParser parser;
         try {
             parser = this.getParser(uri);
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new JsonLoadingException("Failed reading JSON/YAML data from " + uri, e);
         }
 
         try {
             return this.parse(parser);
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new JsonLoadingException("Failed loading JSON/YAML data from " + uri, e);
         }
     }
