@@ -76,9 +76,9 @@ public class JsonLoader {
     public JsonNode parse(String data) throws JsonLoadingException {
         try {
             return this.parse(this.getParser(data));
-        } catch (IOException e) {
+        } catch (IOException | IllegalArgumentException e) {
             throw new JsonLoadingException(
-                    "Failed parsing JSON/YAML data from string '" + data + '"', e
+                "Failed parsing JSON/YAML data from string '" + data + '"', e
             );
         }
     }
