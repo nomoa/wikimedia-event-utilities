@@ -1,15 +1,13 @@
 package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -18,80 +16,93 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 /**
- * Class to load and cache JSONSchema JsonNodes from URIs and event data.
+ * Class to load and cache JSONSchema JsonNodes from relative schema URIs and event data.
  *
  * Usage:
- * <pre>
- * EventSchemaLoader schemaLoader = new EventSchemaLoader("file:///path/to/schemas");
- * // OR use multiple base URIs:
- * EventSchemaLoader schemaLoader = new EventSchemaLoader(
- *     Arrays.asList(
- *         "file:///path/to/schemas1",
- *         "http://schema.repo.org/path/to/schemas"
- *     ))
- * );
+ * <code>
+ * EventSchemaLoader schemaLoader = EventSchemaLoader.builder()
+ *  .setJsonSchemaLoader(ResourceLoader.asURLs(Arrays.asList(
+ *      "file:///path/to/schemas1",
+ *      "http://schema.repo.org/path/to/schemas"
+ *  )))
+ *  .build();
  *
  * // Load the JSONSchema at file:///path/to/schemas/test/event/0.0.2
  * schemaLoader.getEventSchema("/test/event/0.0.2");
  *
  * // Load the JsonNode or JSON String event's JSONSchema at /$schema
  * schemaLoader.getEventSchema(event);
- * </pre>
+ * </code>
  */
 public class EventSchemaLoader {
 
-    protected static final String SCHEMA_FIELD_DEFAULT = "/$schema";
+    /**
+     * When looking up latest schema versions, this will be used instead of a semver string.
+     */
     protected static final String LATEST_FILE_NAME = "latest";
 
-    protected final List<String> baseUris;
+    /**
+     * Field in an event from which to extract the schema URI.
+     */
     protected final JsonPointer schemaFieldPointer;
-    protected final JsonSchemaLoader schemaLoader = JsonSchemaLoader.getInstance();
-    private final JsonSchemaFactory jsonSchemaFactory;
+
+    /**
+     * JsonSchemaLoader used to load schemas from URIs.
+     */
+    protected final JsonSchemaLoader schemaLoader;
+
+    /**
+     * Used to parse a {@link JsonNode} into a {@link JsonSchema} that can be used for validation.
+     */
+    private static final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
 
     private static final Logger log = LogManager.getLogger(EventSchemaLoader.class.getName());
 
     /**
-     * Constructs a EventSchemaLoader with no baseURI prefixes and uses /$schema to extract
-     * schema URIs from events.
-     */
-    public EventSchemaLoader() {
-        this("");
-    }
-
-    /**
-     * Constructs a EventSchemaLoader with a baseUri and uses /$schema to extract
-     * schema URIs from events.
-     */
-    public EventSchemaLoader(String baseUri) {
-        this(Collections.singletonList(baseUri));
-    }
-
-    /**
-     * Constructs a EventSchemaLoaer with possible baseURIs and uses /$schema to extract
-     * schema URIs from events.
-     */
-    public EventSchemaLoader(List<String> baseUris) {
-        this(baseUris, SCHEMA_FIELD_DEFAULT);
-    }
-
-    /**
-     * Constructs a EventSchemaLoader that prefixes URIs with baseURI and
-     * extracts schema URIs from the schemaField in events. And the default JsonSchemaFactory.
-     *
-     * @see JsonSchemaFactory#byDefault()
-     */
-    public EventSchemaLoader(List<String> baseUris, String schemaField) {
-        this(baseUris, schemaField, JsonSchemaFactory.byDefault());
-    }
-
-    /**
      * Constructs a EventSchemaLoader that prefixes URIs with baseURI and
      * extracts schema URIs from the schemaField in events.
+     * This is protected; use {@link EventSchemaLoader.Builder}.
      */
-    public EventSchemaLoader(List<String> baseUris, String schemaField, JsonSchemaFactory schemaFactory) {
-        this.baseUris = baseUris;
-        this.schemaFieldPointer = JsonPointer.compile(schemaField);
-        this.jsonSchemaFactory = schemaFactory;
+    protected EventSchemaLoader(JsonSchemaLoader loader, JsonPointer schemaFieldPointer) {
+        this.schemaFieldPointer = schemaFieldPointer;
+        this.schemaLoader = loader;
+    }
+
+    public static class Builder {
+        private static final String SCHEMA_FIELD_DEFAULT = "/$schema";
+
+        private JsonSchemaLoader jsonSchemaLoader;
+        private String schemaField = SCHEMA_FIELD_DEFAULT;
+
+        /**
+         * Sets the {@link JsonSchemaLoader}.
+         */
+        public Builder setJsonSchemaLoader(JsonSchemaLoader schemaLoader) {
+            this.jsonSchemaLoader = schemaLoader;
+            return this;
+        }
+
+        /**
+         * Sets the schema field from which a schema URI will be extracted from events.
+         */
+        public Builder setSchemaField(String schemaField) {
+            this.schemaField = schemaField;
+            return this;
+        }
+
+        /**
+         * Retuns a new EventSchemaLoader.
+         */
+        public EventSchemaLoader build() {
+            if (jsonSchemaLoader == null) {
+                throw new IllegalArgumentException("Must call setJsonSchemaLoader() before calling build().");
+            }
+            return new EventSchemaLoader(jsonSchemaLoader, JsonPointer.compile(schemaField));
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -102,40 +113,6 @@ public class EventSchemaLoader {
     public JsonNode load(URI schemaUri) throws JsonLoadingException {
         log.debug("Loading event schema at {}", schemaUri);
         return schemaLoader.load(schemaUri);
-    }
-
-    /**
-     * Given a list of schemaURIs, this returns the first successfully loaded schema.
-     *
-     * If no schema is found, an exception will be thrown.
-     */
-    public JsonNode loadFirst(List<URI> schemaURIs) throws JsonLoadingException {
-        JsonNode schema = null;
-        List<JsonLoadingException> loaderExceptions = new ArrayList<>();
-
-        for (URI schemaURI: schemaURIs) {
-            try {
-                schema = this.load(schemaURI);
-                break;
-            } catch (JsonLoadingException e) {
-                loaderExceptions.add(e);
-            }
-        }
-
-        if (schema != null) {
-            return schema;
-        } else {
-            // If we failed loading a schema but we encountered any JsonSchemaLoaderExceptions
-            // while trying, log them all but only throw the first one.
-            if (!loaderExceptions.isEmpty()) {
-                for (JsonLoadingException e: loaderExceptions) {
-                    log.error("Got JsonSchemaLoaderException when trying to load event schema", e);
-                }
-                throw loaderExceptions.get(0);
-            } else {
-                throw new RuntimeException(this + " failed loading event schema");
-            }
-        }
     }
 
     /**
@@ -159,35 +136,6 @@ public class EventSchemaLoader {
     }
 
     /**
-     * Prepends the schemaUri with each of the baseUris.
-     * (Note, the Urls returned here are fully qualified).
-     *
-     * @return List of urls prepended with this EventSchemaLoader's base URIs.
-     */
-    public List<URI> getPossibleSchemaUrls(URI schemaUri) {
-        return this.baseUris.stream().map(baseUri -> {
-            try {
-                return new URI(baseUri + schemaUri);
-            } catch (java.net.URISyntaxException e) {
-                throw new RuntimeException(
-                        "Failed not build new URI with " + baseUri + " and " + schemaUri + ". " +
-                                e.getMessage()
-                );
-            }
-        }).collect(Collectors.toList());
-    }
-
-    /**
-     * Extracts the event's schema URI and prepends it with each of the baseURIs
-     * (Note, the Urls returned here are fully qualified).
-     *
-     * @return List of schema URIs where this event's schema might be.
-     */
-    public List<URI> getPossibleSchemaUrls(JsonNode event) {
-        return getPossibleSchemaUrls(extractSchemaUri(event));
-    }
-
-    /**
      * Converts the given schemaUri to a 'latest' schema URI.  E.g.
      * "/my/schema/1.0.0" returns "/my/schema/latest".
      */
@@ -203,45 +151,18 @@ public class EventSchemaLoader {
         return getLatestSchemaUri(extractSchemaUri(event));
     }
 
-
-    /**
-     * @return a List of possible 'latest' schmea uris
-     */
-    public List<URI> getPossibleLatestSchemaUrls(URI schemaUri) {
-        return getPossibleSchemaUrls(getLatestSchemaUri(schemaUri));
-    }
-
-    /**
-     * Gets the possible schema URIs for this event, but replaces the filename
-     * in the URI to LATEST_FILE_NAME.
-     *
-     * E.g. if possible schema URIs for this event are:
-     * - https://schema.wikimedia.org/repositories/primary/jsonschema/test/event/1.0.0
-     * - https://schema.wikimedia.org/repositories/secondary/jsonschema/test/event/1.0.0
-     *
-     * This will convert them to:
-     * - https://schema.wikimedia.org/repositories/primary/jsonschema/test/event/latest
-     * - https://schema.wikimedia.org/repositories/secondary/jsonschema/test/event/latest
-     *
-     * @return List of schema URIs where this event's latest schema might be.
-     */
-    public List<URI> getPossibleLatestSchemaUrls(JsonNode event) {
-        return getPossibleLatestSchemaUrls(getLatestSchemaUri(event));
-    }
-
-
     /**
      * Get a JsonSchema at schemaUri looking in all baseUris.
      */
     public JsonNode getSchema(URI schemaUri) throws JsonLoadingException {
-        return this.loadFirst(this.getPossibleSchemaUrls(schemaUri));
+        return this.load(schemaUri);
     }
 
     /**
      * Get a 'latest' JsonSchema given a schema URI looking in all baseUris.
      */
     public JsonNode getLatestSchema(URI schemaUri) throws JsonLoadingException {
-        return this.loadFirst(this.getPossibleLatestSchemaUrls(schemaUri));
+        return this.load(getLatestSchemaUri(schemaUri));
     }
 
 
@@ -252,16 +173,16 @@ public class EventSchemaLoader {
      * (prefixed with baseURI) and returns the schema there.
      */
     public JsonNode getEventSchema(JsonNode event) throws JsonLoadingException {
-        return this.loadFirst(this.getPossibleSchemaUrls(event));
+        return this.getSchema(extractSchemaUri(event));
     }
 
     /**
-     * Given a JSON event string, get its  schema URI,
+     * Given a JSON event string, get its schema URI,
      * and load and return schema for the event.
      */
     public JsonNode getEventSchema(String eventString) throws JsonLoadingException {
         JsonNode event = this.schemaLoader.parse(eventString);
-        return this.getEventSchema(event);
+        return getEventSchema(event);
     }
 
     /**
@@ -269,7 +190,7 @@ public class EventSchemaLoader {
      * and load and return schema for the event as a JsonSchema (suited for validation).
      */
     public JsonSchema getEventJsonSchema(String eventString) throws ProcessingException, JsonLoadingException {
-        return this.getEventJsonSchema(this.schemaLoader.parse(eventString));
+        return getEventJsonSchema(this.schemaLoader.parse(eventString));
     }
 
     /**
@@ -294,7 +215,7 @@ public class EventSchemaLoader {
      * the schema there.
      */
     public JsonNode getLatestEventSchema(JsonNode event) throws JsonLoadingException {
-        return this.loadFirst(this.getPossibleLatestSchemaUrls(event));
+        return getSchema(getLatestSchemaUri(event));
     }
 
     /**
@@ -302,16 +223,23 @@ public class EventSchemaLoader {
      * and load and return latest schema for the event.
      */
     public JsonNode getLatestEventSchema(String eventString) throws JsonLoadingException {
-        JsonNode event = this.schemaLoader.parse(eventString);
+        JsonNode event = schemaLoader.parse(eventString);
         return getLatestEventSchema(event);
     }
 
-    public String toString() {
-        return "EventSchemaLoader([" + String.join(", ", baseUris) + "], " +
-            schemaFieldPointer + ")";
+    public JsonLoader getJsonLoader() {
+        return schemaLoader.getJsonLoader();
+    }
+
+    public ResourceLoader getResourceLoader() {
+        return getJsonLoader().getResourceLoader();
     }
 
     public String getLatestVersionFileName() {
         return LATEST_FILE_NAME;
+    }
+
+    public String toString() {
+        return "EventSchemaLoader(" + getResourceLoader() + ", " + schemaFieldPointer + ")";
     }
 }

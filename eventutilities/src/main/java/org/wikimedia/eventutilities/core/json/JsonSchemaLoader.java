@@ -3,35 +3,49 @@ package org.wikimedia.eventutilities.core.json;
 import java.net.URI;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.load.SchemaLoader;
 
 /**
- * Singleton class to handle fetching JSON schemas from URIs,
- * parsing them into JsonNodes, and caching them.
- * URIs can be local file:// URIs or remote HTTP:// URIs, or anything that
- * jackson.dataformat.yaml.YAMLParser can load.  If the data starts with a { or [
- * character, it will be assumed to be json and JsonParser will be used.
- * Otherwise YAMLParser will be used.  JSON data can contain certain unicode
- * characters that YAML cannot, so it is best to use JsonParser when we can.
- *
+ * Uses a {@link JsonLoader} to fetch JSON schemas from URIs and cache them.
  * Usage:
  *
- * JsonSchemaLoader schemaLoader = JsonSchemaLoader.getInstance();
+ * <code>
+ * JsonSchemaLoader schemaLoader = JsonSchemaLoader(schemaBaseURLs);
  * JsonNode schema = schemaLoader.load("http://my.schemas.org/schemas/test/event/schema/0.0.2")
+ * </code>
  */
 public class JsonSchemaLoader {
 
-    static final JsonSchemaLoader instance = new JsonSchemaLoader();
+    /**
+     * Cache of schema URI to JsonNode JSON schemas.
+     */
+    private final ConcurrentHashMap<URI, com.fasterxml.jackson.databind.JsonNode> cache = new ConcurrentHashMap<>();
 
-    final ConcurrentHashMap<URI, com.fasterxml.jackson.databind.JsonNode> cache = new ConcurrentHashMap<>();
+    /**
+     * fge SchemaLoader, used to resolve JSON $ref pointers.
+     */
+    private final SchemaLoader schemaLoader = new SchemaLoader();
 
-    final SchemaLoader schemaLoader = new SchemaLoader();
+    /**
+     * Underlying JsonLoader.
+     */
+    private final JsonLoader jsonLoader;
 
-    public JsonSchemaLoader() { }
+    /**
+     * Make a new JsonSchemaLoader using {@link JsonLoader}.
+     */
+    public JsonSchemaLoader(JsonLoader loader) {
+        this.jsonLoader = loader;
+    }
 
-    public static JsonSchemaLoader getInstance() {
-        return instance;
+    /**
+     * Creates a new JsonLoader using resourceLoader and uses that to create a new JsonSchemaLoader.
+     */
+    public static JsonSchemaLoader build(ResourceLoader resourceLoader) {
+        return new JsonSchemaLoader(new JsonLoader(resourceLoader));
     }
 
     /**
@@ -47,7 +61,6 @@ public class JsonSchemaLoader {
         }
 
         // Use SchemaLoader so we resolve any JsonRefs in the JSONSchema.
-        JsonLoader jsonLoader = JsonLoader.getInstance();
         JsonNode schema = this.schemaLoader.load(jsonLoader.load(schemaUri)).getBaseNode();
         this.cache.put(schemaUri, schema);
         return schema;
@@ -58,7 +71,7 @@ public class JsonSchemaLoader {
      * @param data JSON or YAML string to parse into a JsonNode.
      */
     public JsonNode parse(String data) throws JsonLoadingException {
-        return JsonLoader.getInstance().parse(data);
+        return jsonLoader.parse(data);
     }
 
     /**
@@ -76,10 +89,17 @@ public class JsonSchemaLoader {
     }
 
     /**
-     * Proxy method to put a schema by schemaUri direclty in the local cache.
+     * Proxy method to put a schema by schemaUri directly in the local cache.
      */
     public JsonNode cachePut(URI schemaUri, JsonNode schema) {
         return this.cache.put(schemaUri, schema);
+    }
+
+    /**
+     * Return the underlying JsonLoader.
+     */
+    public JsonLoader getJsonLoader() {
+        return jsonLoader;
     }
 
 }

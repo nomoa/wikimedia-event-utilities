@@ -1,17 +1,16 @@
 package org.wikimedia.eventutilities.core.event;
 
-import java.net.URI;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * Class to aide in constructing EventStream instances and
+ * Class to aide in constructing {@link EventStream} instances and
  * working with groups of event streams using
- * EventStreamConfig and EventSchemaLoader.
+ * {@link EventStreamConfig} and {@link EventSchemaLoader}.
  */
 public class EventStreamFactory {
     /**
@@ -34,17 +33,6 @@ public class EventStreamFactory {
         EventSchemaLoader eventSchemaLoader,
         EventStreamConfig eventStreamConfig
     ) {
-        if (eventSchemaLoader == null) {
-            throw new RuntimeException(
-                "Cannot instantiate EventStreamFactory; eventSchemaLoader must not be null."
-            );
-        }
-        if (eventStreamConfig == null) {
-            throw new RuntimeException(
-                "Cannot instantiate EventStreamFactory; eventStreamConfig must not be null."
-            );
-        }
-
         this.eventSchemaLoader = eventSchemaLoader;
         this.eventStreamConfig = eventStreamConfig;
     }
@@ -52,15 +40,15 @@ public class EventStreamFactory {
     /**
      * EventStreamFactoryBuilder builder pattern to construct
      * EventStreamFactory instance.  Usage:
-     * <pre>
+     * <code>
      *  EventStreamFactory f = EventStreamFactory.builder()
      *      .setEventSchemaLoader(Arrays.asList("file:///path/to/schema/repo"))
      *      .setEventStreamConfig(
-     *          "https://meta.wikimedia.org/w/api.php",
-     *          "file:///path/to/event_service_map.yaml"
+     *          "https://meta.wikimedia.org/w/api.php", // MW Stream Config URL, will use MediawikiEventStreamConfigLoader
+     *          "file:///path/to/event_service_map.yaml" // event service to URI map config file.
      *      )
      *      .build()
-     * </pre>
+     * </code>
      *
      * The default EventStreamFactory returned by .build() will be suitable for use
      * in WMF production, connected to MediaWiki EventStreamConfig API using
@@ -74,13 +62,12 @@ public class EventStreamFactory {
         private EventSchemaLoader eventSchemaLoader;
         private EventStreamConfig eventStreamConfig;
 
+        /**
+         * Set the EventSchemaLoader.
+         */
         public EventStreamFactoryBuilder setEventSchemaLoader(EventSchemaLoader eventSchemaLoader) {
             this.eventSchemaLoader = eventSchemaLoader;
             return this;
-        }
-
-        public EventStreamFactoryBuilder setEventSchemaLoader(List<String> schemaBaseUris) {
-            return this.setEventSchemaLoader(new EventSchemaLoader(schemaBaseUris));
         }
 
         public EventStreamFactoryBuilder setEventStreamConfig(EventStreamConfig eventStreamConfig) {
@@ -88,51 +75,21 @@ public class EventStreamFactory {
             return this;
         }
 
-        public EventStreamFactoryBuilder setEventStreamConfig(String streamConfigUri) {
-            return this.setEventStreamConfig(EventStreamConfig.builder()
-                .setEventStreamConfigLoader(streamConfigUri)
-                .build()
-            );
-        }
-
-        public EventStreamFactoryBuilder setEventStreamConfig(
-            String streamConfigUri,
-            Map<String, URI> eventServiceToUriMap
-        ) {
-            return this.setEventStreamConfig(
-                EventStreamConfig.builder()
-                .setEventStreamConfigLoader(streamConfigUri)
-                .setEventServiceToUriMap(eventServiceToUriMap)
-                .build()
-            );
-        }
-
-        public EventStreamFactoryBuilder setEventStreamConfig(
-            String streamConfigUri,
-            String eventServiceConfigUri
-        ) {
-            return this.setEventStreamConfig(
-                EventStreamConfig.builder()
-                    .setEventStreamConfigLoader(streamConfigUri)
-                    .setEventServiceToUriMap(eventServiceConfigUri)
-                    .build()
-            );
-        }
-
         /**
          * Returns a new EventStreamFactory.  If
          * eventSchemaLoader or eventStreamConfig are not yet set,
-         * new ones will be created using defaults suitable for use
-         * in WMF production.
+         * an IllegalArgumentException will be thrown.
          */
         public EventStreamFactory build() {
             if (this.eventSchemaLoader == null) {
-                setEventSchemaLoader(WikimediaDefaults.SCHEMA_BASE_URIS);
+                throw new IllegalArgumentException(
+                    "Must call setEventSchemaLoader() before calling build()."
+                );
             }
+
             if (this.eventStreamConfig == null) {
-                setEventStreamConfig(
-                    WikimediaDefaults.EVENT_STREAM_CONFIG_URI,
-                    WikimediaDefaults.EVENT_SERVICE_TO_URI_MAP
+                throw new IllegalArgumentException(
+                    "Must call eventStreamConfig() before calling build()."
                 );
             }
 

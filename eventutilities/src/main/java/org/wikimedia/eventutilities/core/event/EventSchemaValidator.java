@@ -1,6 +1,5 @@
 package org.wikimedia.eventutilities.core.event;
 
-import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,11 +18,11 @@ public class EventSchemaValidator {
     }
 
     public ProcessingReport validate(String eventData) throws JsonLoadingException, ProcessingException {
-        return validate(JsonLoader.getInstance().parse(eventData));
+        return validate(schemaLoader.getJsonLoader().parse(eventData));
     }
 
-    public ProcessingReport validate(JsonNode eventData) throws JsonLoadingException, ProcessingException {
-        JsonSchema schema = schemaLoader.getEventJsonSchema(eventData);
-        return schema.validate(eventData);
+    public ProcessingReport validate(JsonNode event) throws JsonLoadingException, ProcessingException {
+        JsonSchema schema = schemaLoader.getEventJsonSchema(event);
+        return schema.validate(event);
     }
 }

@@ -3,7 +3,11 @@ package org.wikimedia.eventutilities.core.json;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
+
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.util.ResourceLoadingException;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -11,11 +15,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.common.io.Resources;
 
+/**
+ * Uses a {@link ResourceLoader} to load content at URIs and parse it into YAML or JSON.
+ *
+ * If the data fetched fromo a URI starts with a { or [
+ * character, it will be assumed to be JSON and JsonParser will be used.
+ * Otherwise YAMLParser will be used. JSON data can contain certain unicode
+ * characters that YAML cannot, so it is best to use JsonParser when we can.
+ */
 public class JsonLoader {
-
-    static final JsonLoader instance = new JsonLoader();
 
     final YAMLFactory  yamlFactory  = new YAMLFactory();
     final JsonFactory  jsonFactory  = new JsonFactory();
@@ -24,24 +33,10 @@ public class JsonLoader {
     // This should be thread safe.
     final ObjectMapper objectMapper = new ObjectMapper();
 
-    public JsonLoader() { }
+    final ResourceLoader resourceLoader;
 
-    public static JsonLoader getInstance() {
-        return instance;
-    }
-
-    /**
-     * Static method that uses the JsonLoader singleton to load and parse JSON
-     * content at a URI.
-     */
-    public static JsonNode get(URI uri) {
-        try {
-            return JsonLoader.getInstance().load(uri);
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(
-                "Failed loading JSON from " + uri + ". " + e.getMessage(), e
-            );
-        }
+    public JsonLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
     }
 
     /**
@@ -56,7 +51,7 @@ public class JsonLoader {
         JsonParser parser;
         try {
             parser = this.getParser(uri);
-        } catch (IOException | IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException | UncheckedIOException | ResourceLoadingException e) {
             throw new JsonLoadingException("Failed reading JSON/YAML data from " + uri, e);
         }
 
@@ -66,7 +61,6 @@ public class JsonLoader {
             throw new JsonLoadingException("Failed loading JSON/YAML data from " + uri, e);
         }
     }
-
 
     /**
      * Parses the JSON or YAML string into a JsonNode.
@@ -96,16 +90,28 @@ public class JsonLoader {
      * See:
      * https://fasterxml.github.io/jackson-databind/javadoc/2.10/com/fasterxml/jackson/databind/ObjectMapper.html#convertValue-java.lang.Object-java.lang.Class
      */
-    public <T> T convertValue(JsonNode jsonNode, Class<T> t) throws JsonProcessingException {
+    public <T> T convertValue(JsonNode jsonNode, Class<T> t) {
         return objectMapper.convertValue(jsonNode, t);
     }
 
-    private JsonNode parse(JsonParser parser) throws IOException {
-        return this.objectMapper.readTree(parser);
+    /**
+     * Returns the underlying {@link ResourceLoader}.
+     */
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
     }
 
     /**
-     * Gets either a YAMLParser or a JsonParser for String data.
+     * Given a {@link JsonParser}, reads it in as a JsonNode.
+     */
+    private JsonNode parse(JsonParser parser) throws IOException {
+        return objectMapper.readTree(parser);
+    }
+
+    /**
+     * Gets a {@link JsonParser} for String data.
+     * If the data starts with a { or [, this will be parsed as JSON,
+     * else it will be parsed as YAML.
      */
     private JsonParser getParser(String data) throws IOException {
         // If the first character is { or [, assume this is
@@ -113,20 +119,23 @@ public class JsonLoader {
         // YAML and use a YAMLParser.
         char firstChar = data.charAt(0);
         if (firstChar == '{' || firstChar == '[') {
-            return this.jsonFactory.createParser(data);
+            return jsonFactory.createParser(data);
         } else {
-            return this.yamlFactory.createParser(data);
+            return yamlFactory.createParser(data);
         }
     }
 
     /**
      * Gets either a YAMLParser or a JsonParser for the data at uri.
+     * If the data starts with a { or [, this will be parsed as JSON,
+     * else it will be parsed as YAML.
      */
-    private JsonParser getParser(URI uri) throws IOException {
-        // FIXME: this does an HTTP call implicitly. It might be nicer to share a single HTTPClient with the rest
-        //        of the code, and rely on a common configuration for error handling, retries, ...
-        String content = Resources.toString(uri.toURL(), UTF_8);
-        return this.getParser(content);
+    private JsonParser getParser(URI uri) throws IOException, ResourceLoadingException {
+        return this.getParser(new String(resourceLoader.load(uri), UTF_8));
+    }
+
+    public String toString() {
+        return "JsonLoader(" + getResourceLoader() + ")";
     }
 
 }

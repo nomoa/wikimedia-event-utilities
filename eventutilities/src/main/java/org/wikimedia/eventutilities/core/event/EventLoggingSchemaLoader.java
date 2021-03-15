@@ -2,12 +2,13 @@ package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -31,33 +32,32 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class EventLoggingSchemaLoader extends EventSchemaLoader {
     /**
-     * Adapted from https://github.com/wikimedia/eventlogging/blob/master/eventlogging/capsule.py.
+     * EventLogging schema names are in an event's `schema` field.
      */
-    protected static final String EVENTLOGGING_SCHEMA_BASE_URI = "https://meta.wikimedia.org/w/api.php";
     protected static final String EVENTLOGGING_SCHEMA_FIELD = "/schema";
 
+    /**
+     * EventCapsule schema.
+     */
     protected final JsonNode eventLoggingCapsuleSchema;
+
     private static final Logger log = LogManager.getLogger(EventLoggingSchemaLoader.class.getName());
 
     /**
-     * Returns a default EventLoggingSchemaLoader for use
-     * with https://meta.wikimedia.org/w/api.php.
+     * Returns an EventLoggingSchemaLoader that uses {@link JsonSchemaLoader} to load JSONSchemas.
+     *
+     * @param schemaLoader
+     *  must have an underlying ResourceLoader that knows how to load
+     *  relative schema URIs, which in EventLogging's case are MediaWiki action API params.
      */
-    public EventLoggingSchemaLoader() {
-        this(EVENTLOGGING_SCHEMA_BASE_URI);
-    }
-
-    /**
-     * Returns an EventLoggingSchemaLoader for use with any wiki API at baseURI.
-     */
-    public EventLoggingSchemaLoader(String baseURI) {
-        super(
-            Collections.singletonList(baseURI),
-            EVENTLOGGING_SCHEMA_FIELD
-        );
+    public EventLoggingSchemaLoader(JsonSchemaLoader schemaLoader) {
+        super(schemaLoader, JsonPointer.compile(EVENTLOGGING_SCHEMA_FIELD));
         this.eventLoggingCapsuleSchema = buildEventLoggingCapsule();
     }
 
+    /**
+     * Adapted from https://github.com/wikimedia/eventlogging/blob/master/eventlogging/capsule.py.
+     */
     protected static JsonNode buildEventLoggingCapsule() {
         JsonNodeFactory jf = JsonNodeFactory.instance;
 
@@ -192,9 +192,8 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
      * @return EventLogging schema URI
      */
     protected URI eventLoggingSchemaUriFor(String name) {
-        String baseUri = baseUris.get(0);
         try {
-            URI schemaUri = new URI(baseUri +
+            URI schemaUri = new URI(
                 "?action=jsonschema&formatversion=2&format=json" +
                 "&title=" + name
             );
@@ -203,7 +202,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
         } catch (URISyntaxException e) {
             throw new RuntimeException(
                 "Could not build EventLogging schema URI for " + name +
-                    " latest revision at " + baseUri, e
+                " latest revision.", e
             );
         }
     }
@@ -215,9 +214,8 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
      * @return EventLogging schema URI
      */
     protected URI eventLoggingSchemaUriFor(String name, Integer revision) {
-        String baseUri = baseUris.get(0);
         try {
-            URI schemaUri = new URI(baseUri +
+            URI schemaUri = new URI(
                 "?action=jsonschema&formatversion=2&format=json" +
                 "&title=" + name +
                 "&revid=" + revision
@@ -227,7 +225,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
         } catch (URISyntaxException e) {
             throw new RuntimeException(
                 "Could not build EventLogging schema URI for " + name +
-                    " revision " + revision + " at " + baseUri, e
+                " revision " + revision + ".", e
             );
         }
     }
@@ -254,6 +252,6 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
     }
 
     public String toString() {
-        return "EventLoggingSchemaLoader(" + baseUris.get(0) + ")";
+        return "EventLoggingSchemaLoader(" + getResourceLoader() + ")";
     }
 }

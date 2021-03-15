@@ -12,7 +12,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -26,7 +29,7 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 public class TestEventSchemaLoader {
     private EventSchemaLoader schemaLoader;
 
-    private static List<String> schemaBaseUris = new ArrayList<>(Arrays.asList(
+    private static final List<String> schemaBaseUris = new ArrayList<>(Arrays.asList(
         "file://" + new File("src/test/resources/event-schemas/repo1").getAbsolutePath(),
         "file://" + new File("src/test/resources/event-schemas/repo2").getAbsolutePath()
     ));
@@ -95,7 +98,15 @@ public class TestEventSchemaLoader {
 
     @BeforeEach
     public void setUp() {
-        schemaLoader = new EventSchemaLoader(schemaBaseUris);
+        JsonLoader loader = new JsonLoader(ResourceLoader.builder().build());
+        schemaLoader = EventSchemaLoader.builder()
+            .setJsonSchemaLoader(new JsonSchemaLoader(new JsonLoader(
+                ResourceLoader.builder()
+                    .withHttpClient()
+                    .setBaseUrls(ResourceLoader.asURLs(schemaBaseUris))
+                    .build()
+            )))
+            .build();
     }
 
     @Test
@@ -105,21 +116,6 @@ public class TestEventSchemaLoader {
         assertEquals(
             expectedTestSchema,
             testSchema
-        );
-    }
-
-    @Test
-    public void getPossibleEventSchemaURIs() throws URISyntaxException {
-        List<URI> expectedSchemaUris = new ArrayList<>();
-        for (String baseUri: schemaBaseUris) {
-            expectedSchemaUris.add(new URI(baseUri + "/test_event.schema.yaml"));
-        }
-
-        List<URI> testSchemaUris = schemaLoader.getPossibleSchemaUrls(testEvent);
-        assertEquals(
-            expectedSchemaUris,
-            testSchemaUris,
-            "Should load schema URI from event $schema field"
         );
     }
 
@@ -145,21 +141,6 @@ public class TestEventSchemaLoader {
     }
 
     @Test
-    public void getPossibleLatestEventSchemaUrls() throws URISyntaxException {
-        List<URI> expectedSchemaUris = new ArrayList<>();
-        for (String baseUri: schemaBaseUris) {
-            expectedSchemaUris.add(new URI(baseUri + "/latest"));
-        }
-
-        List<URI> testSchemaUris = schemaLoader.getPossibleLatestSchemaUrls(testEvent);
-        assertEquals(
-            expectedSchemaUris,
-            testSchemaUris,
-            "Should load latest schema URI from event $schema field"
-        );
-    }
-
-    @Test
     public void getLatestEventSchema() throws JsonLoadingException {
         JsonNode testSchema = schemaLoader.getLatestEventSchema(testEvent);
         assertEquals(
@@ -180,7 +161,7 @@ public class TestEventSchemaLoader {
     }
 
     @Test
-    public void nonExistentSchemaUri() throws URISyntaxException, JsonLoadingException {
+    public void nonExistentSchemaUri() throws URISyntaxException {
         String schemaUri = "/non_existent_schema.yaml";
         try {
             schemaLoader.load(new URI(schemaBaseUris.get(0) + schemaUri));

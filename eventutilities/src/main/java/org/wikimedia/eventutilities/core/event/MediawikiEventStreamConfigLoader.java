@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Locale;
 
 import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * EventStreamConfigLoader implementation that loads stream config
@@ -18,16 +21,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
 
     /**
+     * Used to fetch JSON stream configs from the mediawikiApieEndpoint.
+     */
+    private final JsonLoader jsonLoader;
+
+    /**
      * Base Mediawiki API endpoint, e.g https://meta.wikimedia.org/w/api.php.
      */
     protected String mediawikiApiEndpoint;
-
-    /**
-     * Default Mediawiki API endpoint used to construct MediawikiEventStreamConfigLoader.
-     */
-    private static final String MEDIAWIKI_API_ENDPOINT_DEFAULT =
-        "https://meta.wikimedia.org/w/api.php";
-
 
     /**
      * Key into the EventStreamConfig API response in which stream configs are located.
@@ -35,25 +36,24 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
     protected static final String RESPONSE_STREAMS_KEY = "streams";
 
     /**
-     * Constructs a MediawikiEventStreamConfigLoader that loads from mediawikiApiEndpoint.
+     * Constructs a MediawikiEventStreamConfigLoader that loads from mediawikiApiEndpoint using jsonLoader.
      */
-    public MediawikiEventStreamConfigLoader() {
-        this(MEDIAWIKI_API_ENDPOINT_DEFAULT);
-    }
-
-    /**
-     * Constructs a MediawikiEventStreamConfigLoader that loads from mediawikiApiEndpoint.
-     */
-    public MediawikiEventStreamConfigLoader(String mediawikiApiEndpoint) {
+    public MediawikiEventStreamConfigLoader(String mediawikiApiEndpoint, JsonLoader jsonLoader) {
         this.mediawikiApiEndpoint = mediawikiApiEndpoint;
+        this.jsonLoader = jsonLoader;
     }
 
     /**
      * EventStreamConfigLoader load implementation.
      */
+    @SuppressFBWarnings(value = "EXS_EXCEPTION_SOFTENING_NO_CHECKED", justification = "This method is public.")
     public ObjectNode load(List<String> streamNames) {
         URI uri = makeMediawikiEventStreamConfigApiUri(mediawikiApiEndpoint, streamNames);
-        return (ObjectNode) JsonLoader.get(uri).get("streams");
+        try {
+            return (ObjectNode) jsonLoader.load(uri).get(RESPONSE_STREAMS_KEY);
+        } catch (JsonLoadingException e) {
+            throw new IllegalArgumentException("Failed to load stream configuration", e);
+        }
     }
 
     /**

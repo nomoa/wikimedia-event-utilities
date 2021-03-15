@@ -1,19 +1,25 @@
 package org.wikimedia.eventutilities.core.event;
 
-import java.io.File;
+import static java.util.Collections.singletonList;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
 
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 
 
 public class TestEventSchemaValidator {
-    private final EventSchemaLoader loader = new EventSchemaLoader(
-        "file://" + new File("src/test/resources/event-schemas/repo4").getAbsolutePath()
-    );
+    private final ResourceLoader resLoader = ResourceLoader.builder()
+            .setBaseUrls(singletonList(this.getClass().getResource("/event-schemas/repo4")))
+            .build();
+
+    private final EventSchemaLoader loader = EventSchemaLoader.builder()
+        .setJsonSchemaLoader(JsonSchemaLoader.build(resLoader)).build();
+
     private final EventSchemaValidator validator = new EventSchemaValidator(loader);
 
     @Test

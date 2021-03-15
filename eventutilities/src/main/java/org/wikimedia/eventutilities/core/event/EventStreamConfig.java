@@ -1,6 +1,7 @@
 package org.wikimedia.eventutilities.core.event;
 
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,13 +13,13 @@ import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import java.net.URI;
 
 import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -100,49 +101,64 @@ public class EventStreamConfig {
      */
     public static class EventStreamConfigBuilder {
         private EventStreamConfigLoader eventStreamConfigLoader;
+        private String eventStreamConfigLoaderUri;
         private Map<String, URI> eventServiceToUriMap;
+        private String eventServiceToUriMapUri;
+        private JsonLoader jsonLoader;
 
-        public EventStreamConfigBuilder setEventStreamConfigLoader(
-            EventStreamConfigLoader loader
-        ) {
-            this.eventStreamConfigLoader = loader;
+        public EventStreamConfigBuilder setEventStreamConfigLoader(EventStreamConfigLoader eventStreamConfigLoader) {
+            this.eventStreamConfigLoader = eventStreamConfigLoader;
+            this.eventStreamConfigLoaderUri = null;
             return this;
         }
 
         public EventStreamConfigBuilder setEventStreamConfigLoader(String streamConfigUri) {
-            if (streamConfigUri.contains("/api.php")) {
-                return setEventStreamConfigLoader(
-                    new MediawikiEventStreamConfigLoader(streamConfigUri)
-                );
-            } else {
-                return setEventStreamConfigLoader(
-                    new StaticEventStreamConfigLoader(streamConfigUri)
-                );
-            }
-        }
-
-        public EventStreamConfigBuilder setEventServiceToUriMap(
-            Map<String, URI> eventServiceToUriMap
-        ) {
-            this.eventServiceToUriMap = eventServiceToUriMap;
+            this.eventStreamConfigLoaderUri = streamConfigUri;
+            this.eventStreamConfigLoader = null;
             return this;
         }
 
-        public EventStreamConfigBuilder setEventServiceToUriMap(String eventServiceConfigUri) {
-            return setEventServiceToUriMap(loadEventServiceConfig(eventServiceConfigUri));
+        public EventStreamConfigBuilder setEventServiceToUriMap(Map<String, URI> eventServiceToUriMap) {
+            this.eventServiceToUriMap = eventServiceToUriMap;
+            this.eventServiceToUriMapUri = null;
+            return this;
+        }
+
+        public EventStreamConfigBuilder setEventServiceToUriMap(String eventServiceToUriMapUri) {
+            this.eventServiceToUriMapUri = eventServiceToUriMapUri;
+            this.eventServiceToUriMap = null;
+            return this;
+        }
+
+        public EventStreamConfigBuilder setJsonLoader(JsonLoader jsonLoader) {
+            this.jsonLoader = jsonLoader;
+            return this;
         }
 
         /**
-         * Returns a new EventStreamConfig.  If eventStreamConfigLoader or
-         * eventServiceToUriMap are not yet set, defaults suitable for use in
-         * WMF production will be used, as specified in WikimediaDefaults.
+         * Returns a new EventStreamConfig.  setEventStreamConfigLoader and setEventServiceToUriMap must
+         * have been called before calling build or an IllegalArgumentException will be thrown.
          */
         public EventStreamConfig build() {
-            if (this.eventStreamConfigLoader == null) {
-                setEventStreamConfigLoader(WikimediaDefaults.EVENT_STREAM_CONFIG_URI);
+            if (this.eventStreamConfigLoader == null && this.eventStreamConfigLoaderUri == null) {
+                throw new IllegalArgumentException("Must call setEventStreamConfigLoader() before calling build()");
             }
-            if (this.eventServiceToUriMap == null) {
-                setEventServiceToUriMap(WikimediaDefaults.EVENT_SERVICE_TO_URI_MAP);
+
+            if (this.eventServiceToUriMap == null && this.eventServiceToUriMapUri == null) {
+                throw new IllegalArgumentException(
+                    "Must call setEventServiceToUriMap() before calling build()."
+                );
+            }
+
+            if (this.eventStreamConfigLoader == null) {
+                this.eventStreamConfigLoader = buildEventStreamConfigLoader();
+            }
+
+            if (this.eventServiceToUriMap == null && eventServiceToUriMapUri != null) {
+                // If we get here we know that eventServiceToUriMapUri is not null.
+                this.eventServiceToUriMap = loadEventServiceConfig(
+                    eventServiceToUriMapUri, getJsonLoader()
+                );
             }
 
             return new EventStreamConfig(
@@ -151,26 +167,48 @@ public class EventStreamConfig {
             );
         }
 
+        private EventStreamConfigLoader buildEventStreamConfigLoader() {
+            // If we get here we know that eventStreamConfigLoaderUri is not null.
+            if (eventStreamConfigLoaderUri.contains("/api.php")) {
+                // Assume eventStreamConfigLoaderUri is a MediawikiEventStreamConfigLoader
+                return new MediawikiEventStreamConfigLoader(
+                    eventStreamConfigLoaderUri, getJsonLoader()
+                );
+            } else {
+                // Else assume eventStreamConfigLoaderUri is a StaticEventStreamConfigLoader
+                return new StaticEventStreamConfigLoader(
+                    URI.create(eventStreamConfigLoaderUri), getJsonLoader()
+                );
+            }
+        }
+
+        private JsonLoader getJsonLoader() {
+            if (jsonLoader == null) {
+                jsonLoader = new JsonLoader(ResourceLoader.builder().build());
+            }
+            return jsonLoader;
+        }
+
         /**
          * Loads the YAML or JSON at eventServiceConfigUri into a Map.
          * This expects that the JSON object simply maps an event intake service name to
          * an event intake service URI.
          * @param eventServiceConfigUri
-         *  http://, file:// or other loadable URI.
+         *  http://, file:// or other URI that the JsonLoader can load.
          */
-        protected Map<String, URI> loadEventServiceConfig(
-            String eventServiceConfigUri
+        private static Map<String, URI> loadEventServiceConfig(
+            String eventServiceConfigUri,
+            JsonLoader jsonLoader
         ) {
             Map<String, String> loadedConfig;
             try {
                 // Load eventServiceConfigUri and convert it to a HashMap.
-                loadedConfig = JsonLoader.getInstance().convertValue(
-                    JsonLoader.get(URI.create(eventServiceConfigUri)), HashMap.class
+                loadedConfig = jsonLoader.convertValue(
+                    jsonLoader.load(URI.create(eventServiceConfigUri)), HashMap.class
                 );
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(
-                    "Failed loading event service config from " + eventServiceConfigUri,
-                    e
+            } catch (JsonLoadingException e) {
+                throw new IllegalArgumentException(
+                    "Failed loading event service config from " + eventServiceConfigUri, e
                 );
             }
 
@@ -258,7 +296,7 @@ public class EventStreamConfig {
         // Rebuild an ObjectNode containing the matched stream configs.
         ObjectNode filteredStreamConfigs = JsonNodeFactory.instance.objectNode();
         for (Map.Entry<String, JsonNode> entry : filteredEntries) {
-            filteredStreamConfigs.put(entry.getKey(), entry.getValue());
+            filteredStreamConfigs.set(entry.getKey(), entry.getValue());
         }
         return filteredStreamConfigs;
     }

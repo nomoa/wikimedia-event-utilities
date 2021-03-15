@@ -6,28 +6,30 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.wikimedia.eventutilities.core.json.JsonLoader;
-import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class TestEventStream {
 
     private static final String testStreamConfigsFile =
-        "file://" + new File("src/test/resources/event_stream_configs.json")
-                .getAbsolutePath();
+        "file://" + new File("src/test/resources/event_stream_configs.json").getAbsolutePath();
 
-    private static final List<String> schemaBaseUris = Collections.singletonList(
+    private static final List<URL> schemaBaseUrls = ResourceLoader.asURLs(Collections.singletonList(
         "file://" + new File("src/test/resources/event-schemas/repo3").getAbsolutePath()
-    );
+    ));
 
     private static final HashMap<String, URI> eventServiceToUriMap =
         new HashMap<String, URI>() {{
@@ -49,9 +51,20 @@ public class TestEventStream {
         }};
 
 
+    private static final JsonLoader jsonLoader = new JsonLoader(
+        ResourceLoader.builder()
+        .setBaseUrls(schemaBaseUrls)
+        .build()
+    );
+
     private static final EventStreamFactory eventStreamFactory = EventStreamFactory.builder()
-        .setEventSchemaLoader(schemaBaseUris)
-        .setEventStreamConfig(testStreamConfigsFile, eventServiceToUriMap)
+        .setEventSchemaLoader(EventSchemaLoader.builder().setJsonSchemaLoader(new JsonSchemaLoader(jsonLoader)).build())
+        .setEventStreamConfig(
+            EventStreamConfig.builder()
+                .setEventStreamConfigLoader(testStreamConfigsFile)
+                .setEventServiceToUriMap(eventServiceToUriMap)
+                .build()
+        )
         .build();
 
     private static JsonNode searchSatisfactionSchema;
@@ -59,13 +72,9 @@ public class TestEventStream {
     @BeforeAll
     public static void setUp() throws JsonLoadingException {
         // Read expected some data in for assertions
-        try {
-            searchSatisfactionSchema = JsonLoader.getInstance().load(
-                URI.create(schemaBaseUris.get(0) + "/analytics/legacy/searchsatisfaction/latest")
-            );
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(e);
-        }
+        searchSatisfactionSchema = jsonLoader.load(
+            URI.create(schemaBaseUrls.get(0) + "/analytics/legacy/searchsatisfaction/latest")
+        );
     }
 
     @Test

@@ -232,26 +232,29 @@ public final class JsonEventGenerator {
         }
 
         public JsonEventGenerator build() {
-            Supplier<Instant> actualClock = ingestionTimeClock;
-            if (actualClock == null) {
+            if (schemaLoader == null) {
+                throw new IllegalArgumentException(
+                    "Must call schemaLoader() before calling build()."
+                );
+            }
+
+            if (eventStreamConfig == null) {
+                throw new IllegalArgumentException(
+                    "Must call eventStreamConfig() before calling build()."
+                );
+            }
+
+            if (ingestionTimeClock == null) {
                 Clock clock = Clock.systemUTC();
-                actualClock = clock::instant;
+                ingestionTimeClock = clock::instant;
             }
-            EventSchemaLoader actualSchemaLoader = schemaLoader;
-            if (actualSchemaLoader == null) {
-                actualSchemaLoader = new EventSchemaLoader(WikimediaDefaults.SCHEMA_BASE_URIS);
-            }
-            EventStreamConfig actualStreamConfig = eventStreamConfig;
-            if (actualStreamConfig == null) {
-                actualStreamConfig = EventStreamConfig.builder()
-                        .setEventServiceToUriMap(WikimediaDefaults.EVENT_STREAM_CONFIG_URI)
-                        .build();
-            }
+
             return new JsonEventGenerator(
-                    actualSchemaLoader,
-                    actualStreamConfig,
-                    actualClock,
-                    jsonMapper != null ? jsonMapper : new ObjectMapper());
+                schemaLoader,
+                eventStreamConfig,
+                ingestionTimeClock,
+                jsonMapper != null ? jsonMapper : new ObjectMapper()
+            );
         }
     }
 }

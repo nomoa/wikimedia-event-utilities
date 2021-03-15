@@ -104,6 +104,9 @@ public class EventStream {
         );
     }
 
+    /**
+     * Gets the JSONSchema title configured for this EventStream.
+     */
     public String schemaTitle() {
         return eventStreamConfig.getSchemaTitle(streamName);
     }

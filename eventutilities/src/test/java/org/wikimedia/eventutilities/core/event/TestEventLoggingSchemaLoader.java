@@ -4,9 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -89,7 +93,13 @@ public class TestEventLoggingSchemaLoader {
 
     @BeforeEach
     public void setUp() {
-        schemaLoader = new EventLoggingSchemaLoader("file://" + schemaBaseUri + "/");
+        schemaLoader = new EventLoggingSchemaLoader(
+            new JsonSchemaLoader(new JsonLoader(
+            ResourceLoader.builder()
+                .setBaseUrls(ResourceLoader.asURLs(Collections.singletonList("file://" + schemaBaseUri + "/")))
+                .build()
+            ))
+        );
     }
 
     @Test
@@ -111,7 +121,7 @@ public class TestEventLoggingSchemaLoader {
         );
 
         assertEquals(
-            "file://" + schemaBaseUri + "/?action=jsonschema&formatversion=2&format=json&title=Echo&revid=7731316",
+            "?action=jsonschema&formatversion=2&format=json&title=Echo&revid=7731316",
             uri.toString(),
             "Should return an EventLogging schema URI with revid"
         );
@@ -124,7 +134,7 @@ public class TestEventLoggingSchemaLoader {
         );
 
         assertEquals(
-            "file://" + schemaBaseUri + "/?action=jsonschema&formatversion=2&format=json&title=Echo",
+            "?action=jsonschema&formatversion=2&format=json&title=Echo",
             uri.toString(),
             "Should return an EventLogging schema URI without revid"
         );
@@ -132,7 +142,7 @@ public class TestEventLoggingSchemaLoader {
 
     @Test
     public void schemaURIFromEvent() throws Exception {
-        URI expectedSchemaUri = new URI("file://" + schemaBaseUri + "/?action=jsonschema&formatversion=2&format=json&title=Echo");
+        URI expectedSchemaUri = new URI("?action=jsonschema&formatversion=2&format=json&title=Echo");
         URI uri = schemaLoader.getEventSchemaUri(testEchoEvent);
         assertEquals(
             expectedSchemaUri,

@@ -10,10 +10,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.wikimedia.eventutilities.core.json.JsonLoader;
-import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -28,24 +29,21 @@ public class TestEventStreamConfig {
         "file://" + new File("src/test/resources/event_service_to_uri.yaml")
             .getAbsolutePath();
 
+    private final JsonLoader jsonLoader = new JsonLoader(ResourceLoader.builder().build());
     private EventStreamConfig streamConfigs;
     private ObjectNode testStreamConfigsContent;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws JsonLoadingException {
         streamConfigs = EventStreamConfig.builder()
             .setEventStreamConfigLoader(testStreamConfigsFile)
             .setEventServiceToUriMap(testEventServiceConfigFile)
             .build();
 
-        try {
-            // Read this in for test assertions
-            testStreamConfigsContent = (ObjectNode)JsonLoader.getInstance().load(
-                URI.create(testStreamConfigsFile)
-            );
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(e);
-        }
+        // Read this in for test assertions
+        testStreamConfigsContent = (ObjectNode)jsonLoader.load(
+            URI.create(testStreamConfigsFile)
+        );
     }
 
     @Test

@@ -1,5 +1,6 @@
 package org.wikimedia.eventutilities.core.event;
 
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.EVENT_TIME_FIELD;
@@ -16,6 +17,9 @@ import java.util.Collections;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,10 +32,17 @@ public class TestJsonEventGenerator {
     private final JsonEventGenerator generator;
 
     public TestJsonEventGenerator() throws URISyntaxException {
+        ResourceLoader resourceLoader = ResourceLoader.builder()
+                .setBaseUrls(singletonList(this.getClass().getResource("/event-schemas/repo4")))
+                .build();
+        JsonLoader jsonLoader = new JsonLoader(resourceLoader);
         EventStreamConfig streamConfig = new EventStreamConfig(
-                new StaticEventStreamConfigLoader(this.getClass().getResource("/TestJsonEventGenerator-stream-config.json").toURI()),
+                new StaticEventStreamConfigLoader(this.getClass().getResource("/TestJsonEventGenerator-stream-config.json").toURI(), jsonLoader),
                 Collections.emptyMap());
-        EventSchemaLoader schemaLoader = new EventSchemaLoader(this.getClass().getResource("/event-schemas/repo4").toExternalForm());
+        EventSchemaLoader schemaLoader = EventSchemaLoader.builder()
+            .setJsonSchemaLoader(JsonSchemaLoader.build(resourceLoader))
+            .build();
+
         generator = JsonEventGenerator.builder()
                 .schemaLoader(schemaLoader)
                 .eventStreamConfig(streamConfig)
