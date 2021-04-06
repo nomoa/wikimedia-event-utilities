@@ -17,7 +17,7 @@ import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamConfig;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
 import org.wikimedia.eventutilities.core.http.BasicHttpClient;
-import org.wikimedia.eventutilities.core.http.HttpResult;
+import org.wikimedia.eventutilities.core.http.BasicHttpResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -196,7 +196,7 @@ public class CanaryEventProducer {
      * Refer to docs for postCanaryEVents(streamNames).
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
-    public Map<URI, HttpResult> postAllCanaryEvents() {
+    public Map<URI, BasicHttpResult> postAllCanaryEvents() {
         return postCanaryEvents(
             eventStreamFactory.getEventStreamConfig().cachedStreamNames()
         );
@@ -206,7 +206,7 @@ public class CanaryEventProducer {
      * Posts canary events for a single streamName.
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
-    public Map<URI, HttpResult> postCanaryEvents(String streamName) {
+    public Map<URI, BasicHttpResult> postCanaryEvents(String streamName) {
         return postCanaryEvents(Collections.singletonList(streamName));
     }
 
@@ -214,7 +214,7 @@ public class CanaryEventProducer {
      * Posts canary events for each named event stream.
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
-    public Map<URI, HttpResult> postCanaryEvents(List<String> streamNames) {
+    public Map<URI, BasicHttpResult> postCanaryEvents(List<String> streamNames) {
         return postCanaryEventsForStreams(eventStreamFactory.createEventStreams(streamNames));
     }
 
@@ -228,7 +228,7 @@ public class CanaryEventProducer {
      * this way  The results should be examined after this method returns
      * to check for any failures.
      */
-    public Map<URI, HttpResult> postCanaryEventsForStreams(List<EventStream> eventStreams) {
+    public Map<URI, BasicHttpResult> postCanaryEventsForStreams(List<EventStream> eventStreams) {
         return postEventsToUris(getCanaryEventsToPostForStreams(eventStreams));
     }
 
@@ -246,7 +246,7 @@ public class CanaryEventProducer {
     /**
      * Iterates over the Map of URI to events and posts events to the URI.
      */
-    public Map<URI, HttpResult> postEventsToUris(Map<URI, List<ObjectNode>> uriToEvents) {
+    public Map<URI, BasicHttpResult> postEventsToUris(Map<URI, List<ObjectNode>> uriToEvents) {
         return uriToEvents.entrySet().stream()
             .collect(Collectors.toMap(
                 Map.Entry::getKey,
@@ -264,7 +264,7 @@ public class CanaryEventProducer {
      * httpPostJson a custom isSuccess function to determine this.
      * https://github.com/wikimedia/eventgate/blob/master/spec.yaml#L72
      *
-     * The returned HttpResult will look like:
+     * The returned BasicHttpResult will look like:
      *
      *     success: true,
      *     status 201,
@@ -277,7 +277,7 @@ public class CanaryEventProducer {
      * and the Exception message will be in message, and in the exception field
      * will have the original Exception.
      */
-    public HttpResult postEvents(URI eventServiceUri, List<ObjectNode> events) {
+    public BasicHttpResult postEvents(URI eventServiceUri, List<ObjectNode> events) {
         // Convert List of events to ArrayNode of events to allow
         // jackson to serialize them as an array of events.
         ArrayNode eventsArray = eventsToArrayNode(events);

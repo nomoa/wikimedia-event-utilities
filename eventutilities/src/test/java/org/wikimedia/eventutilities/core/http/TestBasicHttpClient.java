@@ -6,9 +6,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
@@ -22,10 +20,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 
 
-public class TestBasicHttpClient {
+class TestBasicHttpClient {
     private WireMockServer wireMockServer;
     private static BasicHttpClient httpClient;
-
 
     @BeforeEach
     public void startWireMock() {
@@ -59,21 +56,18 @@ public class TestBasicHttpClient {
         wireMockServer.stop();
     }
 
-    public static String fileUrl = "file://" + new File("src/test/resources/event_service_to_uri.yaml").getAbsolutePath();
-
-
     @Test
-    public void testGet() throws IOException {
+    public void testGet() {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
         httpClient = builder.build();
 
         String url = "http://localhost:" + wireMockServer.port() + "/test_get";
-        String r = new String(httpClient.get(URI.create(url)), UTF_8);
+        String r = httpClient.get(URI.create(url)).getBodyAsString();
         assertTrue(r.contains("Host: localhost"));
     }
 
     @Test
-    public void testGetCustomRouteURL() throws IOException, MalformedURLException {
+    public void testGetCustomRouteURL() throws IOException {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
 
         // http://test.host -> http://localhost:xxxxx
@@ -85,7 +79,7 @@ public class TestBasicHttpClient {
 
         // test.host should end up with a successful request to localhost, but with Host header set to test.host
         String url = "http://test.host/test_get";
-        String r = new String(httpClient.get(URI.create(url)), UTF_8);
+        String r = httpClient.get(URI.create(url)).getBodyAsString();
         assertTrue(r.contains("Host: test.host"));
     }
 
@@ -103,10 +97,9 @@ public class TestBasicHttpClient {
 
         // test.host should end up with a successful request to localhost, but with Host header set to test.host
         String url = "http://test.host:" + wireMockServer.port() + "/test_get";
-        String r = new String(httpClient.get(URI.create(url)), UTF_8);
+        String r = httpClient.get(URI.create(url)).getBodyAsString();
         assertTrue(r.contains("Host: test.host"));
     }
-
 
     @Test
     public void testPost() throws IOException {
@@ -121,9 +114,9 @@ public class TestBasicHttpClient {
         httpClient = builder.build();
 
         String url = "http://test.host:" + wireMockServer.port() + "/test_post";
-        HttpResult r = httpClient.post(URI.create(url), "body time".getBytes(UTF_8));
+        BasicHttpResult r = httpClient.post(URI.create(url), "body time".getBytes(UTF_8));
         assertTrue(r.getSuccess());
-        assertTrue(r.getBody().contains("Host: test.host"));
-        assertTrue(r.getBody().contains("Body: body time"));
+        assertTrue(r.getBodyAsString().contains("Host: test.host"));
+        assertTrue(r.getBodyAsString().contains("Body: body time"));
     }
 }

@@ -203,8 +203,8 @@ public class ResourceLoader {
          * Adds loaders for http and https using {@link BasicHttpClient}.
          */
         public Builder withHttpClient(BasicHttpClient httpClient) {
-            loaders.put("http", httpClient.asResourceLoader());
-            loaders.put("https", httpClient.asResourceLoader());
+            loaders.put("http", httpClient::getAsBytes);
+            loaders.put("https", httpClient::getAsBytes);
             return this;
         }
 

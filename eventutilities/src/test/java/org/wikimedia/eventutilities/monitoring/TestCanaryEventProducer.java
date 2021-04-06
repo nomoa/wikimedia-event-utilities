@@ -29,7 +29,7 @@ import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
 import org.wikimedia.eventutilities.core.event.EventStreamConfig;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
 import org.wikimedia.eventutilities.core.http.BasicHttpClient;
-import org.wikimedia.eventutilities.core.http.HttpResult;
+import org.wikimedia.eventutilities.core.http.BasicHttpResult;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
@@ -40,7 +40,7 @@ import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 
-public class TestCanaryEventProducer {
+class TestCanaryEventProducer {
 
     WireMockServer wireMockServer;
 
@@ -226,7 +226,7 @@ public class TestCanaryEventProducer {
                 "http://localhost:%d/v1/events", wireMockServer.port()
         ));
 
-        HttpResult result = canaryEventProducer.postEvents(
+        BasicHttpResult result = canaryEventProducer.postEvents(
             url,
             Collections.singletonList(canaryEvent)
         );
@@ -244,7 +244,7 @@ public class TestCanaryEventProducer {
                 "http://localhost:%d/bad_url", wireMockServer.port()
         ));
 
-        HttpResult result = canaryEventProducer.postEvents(
+        BasicHttpResult result = canaryEventProducer.postEvents(
             url,
             Collections.singletonList(canaryEvent)
         );
