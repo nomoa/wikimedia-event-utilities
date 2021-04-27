@@ -103,7 +103,11 @@ public class BasicHttpResult {
     }
 
     public String getBodyAsString() {
-        return new String(body, UTF_8);
+        if (body == null) {
+            return "";
+        } else {
+            return new String(body, UTF_8);
+        }
     }
 
     public IOException getException() {
