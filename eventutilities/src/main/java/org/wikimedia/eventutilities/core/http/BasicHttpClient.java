@@ -10,23 +10,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
 
-import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.conn.routing.HttpRoutePlanner;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.DefaultRoutePlanner;
 import org.apache.http.impl.conn.DefaultSchemePortResolver;
-import org.apache.http.protocol.HttpContext;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
+import org.wikimedia.utils.http.CustomRoutePlanner;
 
 /**
  * Wrapper around a {@link CloseableHttpClient} that aides in getting byte[] content at a URI.
@@ -142,7 +138,7 @@ public class BasicHttpClient {
          * advised to use them in a map, the String representation is preferred
          * here.
          */
-        private final Map<String, URL> customRoutes = new HashMap<>();
+        private final Map<String, HttpHost> customRoutes = new HashMap<>();
 
         private final HttpClientBuilder clientBuilder;
         public Builder() {
@@ -159,7 +155,7 @@ public class BasicHttpClient {
          * If targetURL does not have a port defined, sourceURL's port will be used.
          */
         public Builder addRoute(String sourceURL, String targetURL) throws MalformedURLException {
-            addRoute(new URL(sourceURL), new URL(targetURL));
+            this.customRoutes.put(new URL(sourceURL).getHost(), HttpHost.create(targetURL));
             return this;
         }
 
@@ -167,14 +163,14 @@ public class BasicHttpClient {
          * Add custom route using URLs instead of STrings.
          */
         public Builder addRoute(URL sourceURL, URL targetURL) {
-            customRoutes.put(sourceURL.toExternalForm(), targetURL);
+            customRoutes.put(sourceURL.getHost(), new HttpHost(targetURL.getHost(), targetURL.getPort(), targetURL.getProtocol()));
             return this;
         }
 
         public BasicHttpClient build() {
             if (!customRoutes.isEmpty()) {
                 clientBuilder.setRoutePlanner(
-                    new CustomRoute(
+                    new CustomRoutePlanner(
                         Collections.unmodifiableMap(customRoutes),
                         new DefaultRoutePlanner(DefaultSchemePortResolver.INSTANCE)
                     )
@@ -184,44 +180,4 @@ public class BasicHttpClient {
         }
     }
 
-    /**
-     * Used if BasicHttpClient.Builder is used to add custom routes.
-     */
-    private static class CustomRoute implements HttpRoutePlanner {
-        private final Map<String, URL> routes;
-        private final HttpRoutePlanner defaultRoutePlanner;
-
-        CustomRoute(Map<String, URL> routes, HttpRoutePlanner defaultRoutePlanner) {
-            this.routes = routes;
-            this.defaultRoutePlanner = defaultRoutePlanner;
-        }
-
-        /**
-         * Gets a string URI form of requestHost. If this exists in routes,
-         * routes value will be used to create a new HttpRoute to the target route value.
-         */
-        @Override
-        public HttpRoute determineRoute(
-            HttpHost requestHost,
-            HttpRequest request,
-            HttpContext context
-        ) throws HttpException {
-            String requestURL;
-            requestURL = requestHost.toURI();
-
-            URL targetURL = routes.get(requestURL);
-            if (targetURL != null) {
-                return new HttpRoute(
-                    new HttpHost(
-                        targetURL.getHost(),
-                        // If the target port was not set, then assume we want use the same one as the request url.
-                        targetURL.getPort() != -1 ? targetURL.getPort() : requestHost.getPort(),
-                        targetURL.getProtocol()
-                    )
-                );
-            } else {
-                return defaultRoutePlanner.determineRoute(requestHost, request, context);
-            }
-        }
-    }
 }
