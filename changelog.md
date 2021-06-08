@@ -1,3 +1,6 @@
+## 1.0.8
+- Move from log4j-2 to slf4j
+
 ## 1.0.7
 - Support filtering EventStreamConfig by JsonPointer path
 - BasicHttpClient needs to close the underlying HttpClient.

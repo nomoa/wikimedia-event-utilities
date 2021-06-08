@@ -2,8 +2,8 @@ package org.wikimedia.eventutilities.core.event;
 
 import java.net.URI;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
@@ -57,7 +57,7 @@ public class EventSchemaLoader {
      */
     private static final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
 
-    private static final Logger log = LogManager.getLogger(EventSchemaLoader.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(EventSchemaLoader.class.getName());
 
     /**
      * Constructs a EventSchemaLoader that prefixes URIs with baseURI and

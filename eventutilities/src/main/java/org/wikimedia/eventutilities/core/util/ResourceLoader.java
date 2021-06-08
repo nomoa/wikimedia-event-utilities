@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 
 import com.google.common.collect.ImmutableList;
@@ -52,7 +52,7 @@ public class ResourceLoader {
      */
     private final List<URL> baseUrls;
 
-    private static final Logger log = LogManager.getLogger(ResourceLoader.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(ResourceLoader.class.getName());
 
 
     /**

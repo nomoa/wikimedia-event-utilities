@@ -3,10 +3,10 @@ package org.wikimedia.eventutilities.core.event;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,7 +41,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
      */
     protected final JsonNode eventLoggingCapsuleSchema;
 
-    private static final Logger log = LogManager.getLogger(EventLoggingSchemaLoader.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(EventLoggingSchemaLoader.class.getName());
 
     /**
      * Returns an EventLoggingSchemaLoader that uses {@link JsonSchemaLoader} to load JSONSchemas.
