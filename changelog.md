@@ -1,3 +1,6 @@
+## 1.0.9
+- create assembly jar-with-dependencies
+
 ## 1.0.8
 - Move from log4j-2 to slf4j
 
