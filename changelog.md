@@ -1,3 +1,6 @@
+## 1.0.11
+- Add WikimediaExternalDefaults for testing in repl outside WMF production
+
 ## 1.0.9
 - create assembly jar-with-dependencies
 
