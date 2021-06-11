@@ -144,21 +144,18 @@ public class EventStreamConfig {
                 throw new IllegalArgumentException("Must call setEventStreamConfigLoader() before calling build()");
             }
 
-            if (this.eventServiceToUriMap == null && this.eventServiceToUriMapUri == null) {
-                throw new IllegalArgumentException(
-                    "Must call setEventServiceToUriMap() before calling build()."
-                );
-            }
-
             if (this.eventStreamConfigLoader == null) {
                 this.eventStreamConfigLoader = buildEventStreamConfigLoader();
             }
 
-            if (this.eventServiceToUriMap == null && eventServiceToUriMapUri != null) {
-                // If we get here we know that eventServiceToUriMapUri is not null.
-                this.eventServiceToUriMap = loadEventServiceConfig(
-                    eventServiceToUriMapUri, getJsonLoader()
-                );
+            if (this.eventServiceToUriMap == null) {
+                if (eventServiceToUriMapUri != null) {
+                    this.eventServiceToUriMap = loadEventServiceConfig(
+                        eventServiceToUriMapUri, getJsonLoader()
+                    );
+                } else {
+                    this.eventServiceToUriMap = new HashMap<String, URI>();
+                }
             }
 
             return new EventStreamConfig(
