@@ -22,6 +22,7 @@ import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -73,16 +74,13 @@ public class EventStreamConfig {
         EventStreamConfigLoader eventStreamConfigLoader,
         Map<String, URI> eventServiceToUriMap
     ) {
-        if (eventStreamConfigLoader == null) {
-            throw new RuntimeException(
-                "Cannot instantiate EventStreamConfig; eventStreamConfigLoader must not be null."
-            );
-        }
-        if (eventServiceToUriMap == null) {
-            throw new RuntimeException(
-                "Cannot instantiate EventStreamConfig; eventServiceToUriMap must not be null."
-            );
-        }
+        Preconditions.checkArgument(
+                eventStreamConfigLoader != null,
+                "Cannot instantiate EventStreamConfig; eventStreamConfigLoader must not be null.");
+
+        Preconditions.checkArgument(
+                eventServiceToUriMap != null,
+                "Cannot instantiate EventStreamConfig; eventServiceToUriMap must not be null.");
 
         this.eventStreamConfigLoader = eventStreamConfigLoader;
         this.eventServiceToUriMap = ImmutableMap.copyOf(eventServiceToUriMap);
@@ -143,9 +141,9 @@ public class EventStreamConfig {
          * have been called before calling build or an IllegalArgumentException will be thrown.
          */
         public EventStreamConfig build() {
-            if (this.eventStreamConfigLoader == null && this.eventStreamConfigLoaderUri == null) {
-                throw new IllegalArgumentException("Must call setEventStreamConfigLoader() before calling build()");
-            }
+            Preconditions.checkState(
+                    eventStreamConfigLoader != null || this.eventStreamConfigLoaderUri != null,
+                    "Must call setEventStreamConfigLoader() before calling build()");
 
             if (this.eventStreamConfigLoader == null) {
                 this.eventStreamConfigLoader = buildEventStreamConfigLoader();

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 
 /**
  * Class to aide in constructing {@link EventStream} instances and
@@ -82,17 +83,13 @@ public class EventStreamFactory {
          * an IllegalArgumentException will be thrown.
          */
         public EventStreamFactory build() {
-            if (this.eventSchemaLoader == null) {
-                throw new IllegalArgumentException(
-                    "Must call setEventSchemaLoader() before calling build()."
-                );
-            }
+            Preconditions.checkState(
+                    eventSchemaLoader != null,
+                    "Must call setEventSchemaLoader() before calling build().");
 
-            if (this.eventStreamConfig == null) {
-                throw new IllegalArgumentException(
-                    "Must call eventStreamConfig() before calling build()."
-                );
-            }
+            Preconditions.checkState(
+                    eventStreamConfig != null,
+                    "Must call eventStreamConfig() before calling build().");
 
             return new EventStreamFactory(
                 this.eventSchemaLoader,

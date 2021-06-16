@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.google.common.base.Preconditions;
 
 /**
  * Class to load and cache JSONSchema JsonNodes from relative schema URIs and event data.
@@ -94,9 +95,10 @@ public class EventSchemaLoader {
          * Retuns a new EventSchemaLoader.
          */
         public EventSchemaLoader build() {
-            if (jsonSchemaLoader == null) {
-                throw new IllegalArgumentException("Must call setJsonSchemaLoader() before calling build().");
-            }
+            Preconditions.checkState(
+                    jsonSchemaLoader != null,
+                    "Must call setJsonSchemaLoader() before calling build().");
+
             return new EventSchemaLoader(jsonSchemaLoader, JsonPointer.compile(schemaField));
         }
     }
@@ -120,12 +122,10 @@ public class EventSchemaLoader {
      */
     public URI extractSchemaUri(JsonNode event) {
         String uriString = event.at(schemaFieldPointer).textValue();
-        if (uriString == null) {
-            throw new RuntimeException(
-                "Could not extract " + schemaFieldPointer +
-                " field from event, field does not exist"
-            );
-        }
+        Preconditions.checkNotNull(
+                uriString,
+                "Could not extract %s field from event, field does not exist", schemaFieldPointer
+        );
         try {
             return new URI(uriString);
         } catch (java.net.URISyntaxException e) {

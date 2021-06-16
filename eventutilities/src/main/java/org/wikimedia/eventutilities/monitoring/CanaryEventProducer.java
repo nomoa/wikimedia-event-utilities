@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -116,11 +117,10 @@ public class CanaryEventProducer {
      * Creates a canary event from an example event for a stream.
      */
     protected static ObjectNode makeCanaryEvent(String streamName, ObjectNode example) {
-        if (example == null) {
-            throw new NullPointerException(
-                "Cannot make canary event for " + streamName + ", example is null."
-            );
-        }
+        Preconditions.checkArgument(
+                example != null,
+                "Cannot make canary event for %s, example is null.", streamName
+        );
 
         ObjectNode canaryEvent = example.deepCopy();
         ObjectNode canaryMeta = (ObjectNode)canaryEvent.get("meta");

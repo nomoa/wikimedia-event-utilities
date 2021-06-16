@@ -7,6 +7,7 @@ import org.wikimedia.eventutilities.core.json.JsonLoadingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Preconditions;
 
 /**
  * Represents a single event stream.  An event stream is a named continuous stream
@@ -40,9 +41,10 @@ public class EventStream {
         EventSchemaLoader eventSchemaLoader,
         EventStreamConfig eventStreamConfig
     ) {
-        if (streamName.startsWith("/")) {
-            throw new RuntimeException("EventStream name must not be a regex, was " + streamName);
-        }
+        Preconditions.checkArgument(
+                !streamName.startsWith("/"),
+                "EventStream name must not be a regex, was %s", streamName
+        );
 
         this.streamName = streamName;
         this.eventSchemaLoader = eventSchemaLoader;
