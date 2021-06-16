@@ -56,6 +56,11 @@ class TestBasicHttpClient {
         wireMockServer.stop();
     }
 
+    @AfterEach
+    public void clostHttpClient() throws IOException {
+        if (httpClient != null) httpClient.close();
+    }
+
     @Test
     public void testGet() {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();

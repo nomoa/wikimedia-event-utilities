@@ -1,5 +1,6 @@
 package org.wikimedia.eventutilities.core.http;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -32,13 +33,13 @@ import org.wikimedia.utils.http.CustomRoutePlanner;
  * NOTE: This class stores the HTTP response body in an in memory byte[] in {@link BasicHttpResult}
  * and as such should not be used for large or complex HTTP requests.
  */
-public class BasicHttpClient {
+public final class BasicHttpClient implements Closeable {
     /**
      * Underlying HttpClient.
      */
     private final CloseableHttpClient httpClient;
 
-    public BasicHttpClient(CloseableHttpClient httpClient) {
+    private BasicHttpClient(CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
@@ -126,6 +127,11 @@ public class BasicHttpClient {
      */
     protected static boolean acceptableStatusPredicateDefault(int statusCode) {
         return statusCode >= 200 && statusCode < 300;
+    }
+
+    @Override
+    public void close() throws IOException {
+        httpClient.close();
     }
 
     /**
