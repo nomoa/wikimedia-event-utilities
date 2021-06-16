@@ -10,11 +10,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonLoadingException;
+import org.wikimedia.eventutilities.core.util.ResourceLoader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -75,12 +76,15 @@ public class TestEventStreamConfig {
     @Test
     public void cachedStreamNames() {
         List<String> streams = streamConfigs.cachedStreamNames();
-        Collections.sort(streams);
-        List<String> expected = Arrays.asList(
-            "mediawiki.page-create", "eventlogging_SearchSatisfaction", "/^mediawiki\\.job\\..+/", "no_settings"
-        );
-        Collections.sort(expected);
-        assertEquals(expected, streams, "Should return all known stream names");
+        Assertions.assertThat(streams)
+                .withFailMessage("Should return all known stream names")
+                .containsExactlyInAnyOrder(
+                        "mediawiki.page-create",
+                        "eventlogging_SearchSatisfaction",
+                        "/^mediawiki\\.job\\..+/",
+                        "no_settings"
+                );
+
     }
 
     @Test

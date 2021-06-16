@@ -1,9 +1,10 @@
 package org.wikimedia.eventutilities.core.event;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -113,7 +114,7 @@ public class EventStreamFactory {
         return createEventStreams(
             eventStreamConfig.cachedStreamNames().stream()
                 .filter(streamName -> !streamName.startsWith("/"))
-                .collect(Collectors.toList())
+                .collect(toImmutableList())
         );
     }
 
@@ -132,7 +133,7 @@ public class EventStreamFactory {
     public List<EventStream> createEventStreams(Collection<String> streamNames) {
         return streamNames.stream()
             .map(this::createEventStream)
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
     }
 
     /**
@@ -162,7 +163,7 @@ public class EventStreamFactory {
                     JsonNode streamSetting = eventStream.getSetting(settingEntry.getKey());
                     return streamSetting != null && streamSetting.asText().equals(settingEntry.getValue());
                 }))
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
     }
 
     /**

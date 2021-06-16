@@ -6,7 +6,6 @@ import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
@@ -24,6 +23,8 @@ import org.apache.http.impl.conn.DefaultRoutePlanner;
 import org.apache.http.impl.conn.DefaultSchemePortResolver;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import org.wikimedia.utils.http.CustomRoutePlanner;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Wrapper around a {@link CloseableHttpClient} that aides in getting byte[] content at a URI.
@@ -177,7 +178,7 @@ public final class BasicHttpClient implements Closeable {
             if (!customRoutes.isEmpty()) {
                 clientBuilder.setRoutePlanner(
                     new CustomRoutePlanner(
-                        Collections.unmodifiableMap(customRoutes),
+                        ImmutableMap.copyOf(customRoutes),
                         new DefaultRoutePlanner(DefaultSchemePortResolver.INSTANCE)
                     )
                 );

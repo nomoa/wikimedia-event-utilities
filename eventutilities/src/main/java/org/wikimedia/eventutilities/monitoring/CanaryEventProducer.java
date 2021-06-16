@@ -1,11 +1,13 @@
 package org.wikimedia.eventutilities.monitoring;
 
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +22,10 @@ import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 import org.wikimedia.eventutilities.core.http.BasicHttpResult;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -145,7 +147,7 @@ public class CanaryEventProducer {
      * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(String streamName) {
-        return getCanaryEventsToPost(Collections.singletonList(streamName));
+        return getCanaryEventsToPost(ImmutableList.of(streamName));
     }
 
     /**
@@ -180,11 +182,11 @@ public class CanaryEventProducer {
         // Each set of canary events can be POSTed to their keyed
         // event service url.
         return eventStreamsByEventServiceUrl.entrySet().stream()
-            .collect(Collectors.toMap(
+            .collect(toImmutableMap(
                 Map.Entry::getKey,
                 entry -> entry.getValue().stream()
                     .map(this::canaryEvent)
-                    .collect(Collectors.toList())
+                    .collect(toImmutableList())
             ));
     }
 
@@ -207,7 +209,7 @@ public class CanaryEventProducer {
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
     public Map<URI, BasicHttpResult> postCanaryEvents(String streamName) {
-        return postCanaryEvents(Collections.singletonList(streamName));
+        return postCanaryEvents(ImmutableList.of(streamName));
     }
 
     /**
@@ -248,7 +250,7 @@ public class CanaryEventProducer {
      */
     public Map<URI, BasicHttpResult> postEventsToUris(Map<URI, List<ObjectNode>> uriToEvents) {
         return uriToEvents.entrySet().stream()
-            .collect(Collectors.toMap(
+            .collect(toImmutableMap(
                 Map.Entry::getKey,
                 entry -> postEvents(entry.getKey(), entry.getValue())
             ));

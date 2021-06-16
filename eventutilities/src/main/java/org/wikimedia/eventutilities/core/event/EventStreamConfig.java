@@ -1,16 +1,17 @@
 package org.wikimedia.eventutilities.core.event;
 
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.util.stream.Collectors.joining;
+
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -21,6 +22,8 @@ import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Class to fetch and work with stream configuration from the a URI.
@@ -48,7 +51,7 @@ public class EventStreamConfig {
     /**
      * Maps event service name to a service URL.
      */
-    protected Map<String, URI> eventServiceToUriMap;
+    protected ImmutableMap<String, URI> eventServiceToUriMap;
 
     /**
      * Used to load stream config at instantiation and on demand.
@@ -82,7 +85,7 @@ public class EventStreamConfig {
         }
 
         this.eventStreamConfigLoader = eventStreamConfigLoader;
-        this.eventServiceToUriMap = eventServiceToUriMap;
+        this.eventServiceToUriMap = ImmutableMap.copyOf(eventServiceToUriMap);
 
         // Get and store all known stream configs.
         // The stream configs endpoint should return an object mapping
@@ -211,7 +214,7 @@ public class EventStreamConfig {
 
             // Convert our String -> String HashMap into String -> URI.
             return new HashMap<>(loadedConfig.entrySet().stream()
-                .collect(Collectors.toMap(
+                .collect(toImmutableMap(
                     Map.Entry::getKey,
                     e -> URI.create(e.getValue()))
                 )
@@ -288,7 +291,7 @@ public class EventStreamConfig {
                         return streamSettingValue != null && streamSettingValue.asText().equals(targetSetting.getValue());
                     });
             })
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
 
         // Rebuild an ObjectNode containing the matched stream configs.
         ObjectNode filteredStreamConfigs = JsonNodeFactory.instance.objectNode();
@@ -309,9 +312,9 @@ public class EventStreamConfig {
      * Returns all cached stream name keys.
      */
     public List<String> cachedStreamNames() {
-        List<String> streamNames = new ArrayList<>();
+        ImmutableList.Builder<String> streamNames = ImmutableList.builder();
         streamConfigsCache.fieldNames().forEachRemaining(streamNames::add);
-        return streamNames;
+        return streamNames.build();
     }
 
     /**
@@ -326,7 +329,7 @@ public class EventStreamConfig {
      * </pre>
      */
     public ObjectNode getStreamConfig(String streamName) {
-        return getStreamConfigs(Collections.singletonList(streamName));
+        return getStreamConfigs(ImmutableList.of(streamName));
     }
 
     /**
@@ -337,7 +340,7 @@ public class EventStreamConfig {
         // If any of the desired streams are not cached, try to fetch them now and cache them.
         List<String> unfetchedStreams = streamNames.stream()
             .filter(streamName -> !streamConfigsCache.has(streamName))
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
 
         if (!unfetchedStreams.isEmpty()) {
             ObjectNode fetchedStreamConfigs = eventStreamConfigLoader.load(unfetchedStreams);
@@ -403,7 +406,7 @@ public class EventStreamConfig {
      * </pre>
      */
     public List<JsonNode> collectSetting(String streamName, String settingName) {
-        return collectSettings(Collections.singletonList(streamName), settingName);
+        return collectSettings(ImmutableList.of(streamName), settingName);
     }
 
     /**
@@ -586,7 +589,7 @@ public class EventStreamConfig {
                     return s;
                 }
             }))
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
         return "(" + String.join("|", stringsForRegex) + ")";
     }
 
@@ -634,7 +637,7 @@ public class EventStreamConfig {
             " with event service URI mapping:\n  " +
             eventServiceToUriMap.entrySet().stream()
                 .map(k -> k + " -> " + eventServiceToUriMap.get(k))
-                .collect(Collectors.joining("\n  "));
+                .collect(joining("\n  "));
     }
 
     /**
@@ -651,7 +654,7 @@ public class EventStreamConfig {
         ObjectNode objectNode,
         String fieldName
     ) {
-        List<JsonNode> results = new ArrayList<>();
+        ImmutableList.Builder<JsonNode> results = ImmutableList.builder();
 
         for (JsonNode jsonNode : objectNode.findValues(fieldName)) {
             if (jsonNode.isArray()) {
@@ -660,7 +663,7 @@ public class EventStreamConfig {
                 results.add(jsonNode);
             }
         }
-        return results;
+        return results.build();
     }
 
     /**
@@ -669,7 +672,7 @@ public class EventStreamConfig {
     protected static List<String> jsonNodesAsText(Collection<JsonNode> jsonNodes) {
         return jsonNodes.stream()
             .map(JsonNode::asText)
-            .collect(Collectors.toList());
+            .collect(toImmutableList());
     }
 
 }

@@ -1,5 +1,7 @@
 package org.wikimedia.eventutilities.core.util;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
+
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -7,17 +9,17 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
 /**
@@ -141,7 +143,7 @@ public class ResourceLoader {
      */
     public List<URI> getPossibleResourceUris(URI uri) {
         if (uri.isAbsolute() || baseUrls.isEmpty()) {
-            return Collections.singletonList(uri);
+            return ImmutableList.of(uri);
         } else {
             return baseUrls.stream().map(baseUrl -> {
                 try {
@@ -151,7 +153,7 @@ public class ResourceLoader {
                         "Failed building new URI with " + baseUrl + " + " + uri + ". ", e
                     );
                 }
-            }).collect(Collectors.toList());
+            }).collect(toImmutableList());
         }
     }
 
@@ -225,7 +227,7 @@ public class ResourceLoader {
         }
 
         public ResourceLoader build() {
-            return new ResourceLoader(Collections.unmodifiableMap(loaders), defaultLoader, baseUrls);
+            return new ResourceLoader(ImmutableMap.copyOf(loaders), defaultLoader, baseUrls);
         }
     }
 
@@ -244,7 +246,7 @@ public class ResourceLoader {
      * Helper function to convert a List of String urls to URLs.
      */
     public static List<URL> asURLs(Collection<String> baseUrls) {
-        return baseUrls.stream().map(ResourceLoader::asURL).collect(Collectors.toList());
+        return baseUrls.stream().map(ResourceLoader::asURL).collect(toImmutableList());
     }
 
 
