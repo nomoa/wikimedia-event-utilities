@@ -7,13 +7,23 @@
   "mediawiki.page-create": {
     "schema_title": "mediawiki/revision/create",
     "destination_event_service": "eventgate-main",
-    "topics": ["eqiad.mediawiki.page-create", "codfw.mediawiki.page-create"]
+    "topics": ["eqiad.mediawiki.page-create", "codfw.mediawiki.page-create"],
+    "consumers": {
+      "client_name": {
+        "job_name": "general"
+      }
+    }
   },
   "eventlogging_SearchSatisfaction": {
     "schema_title": "analytics/legacy/searchsatisfaction",
     "destination_event_service": "eventgate-analytics-external",
     "topics": ["eventlogging_SearchSatisfaction"],
-    "canary_events_enabled": true
+    "canary_events_enabled": true,
+    "consumers": {
+      "client_name": {
+        "job_name": "general"
+      }
+    }
   },
   "no_settings": { }
 }

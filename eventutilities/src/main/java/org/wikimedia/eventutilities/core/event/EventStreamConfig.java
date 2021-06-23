@@ -31,6 +31,9 @@ import com.google.common.collect.ImmutableMap;
  * Upon instantiation, this will attempt to pre fetch and cache all stream config from
  * streamConfigsUri.  Further accesses of uncached stream names will cause
  * a fetch from the result of makeStreamConfigsUriForStreams for the uncached stream names only.
+ *
+ * Wherever a settingName parameter is used, if it begins with a '/', it will be assumed
+ * the settingName is a JsonPointer path, instead of a top level key.
  */
 public class EventStreamConfig {
 
@@ -266,6 +269,8 @@ public class EventStreamConfig {
      * Since settingsFilters must all be strings, this only allows filtering
      * on string stream config settings, or at least ones for which JsonNode.asText()
      * returns something sane (which is true for most primitive types).
+     * The keys in settingsFilters are assumed to top level field names, unless
+     * the key starts with a '/', in which case it will be assumed to be a JsonPointer.
      */
     public ObjectNode filterStreamConfigs(
         List<String> streamNames,
@@ -285,8 +290,17 @@ public class EventStreamConfig {
                 // Return true if all settingsFilters match for this streamConfigEntry.
                 return settingsFilters.entrySet().stream()
                     .allMatch(targetSetting -> {
-                        JsonNode streamSettingValue = settings.get(targetSetting.getKey());
-                        return streamSettingValue != null && streamSettingValue.asText().equals(targetSetting.getValue());
+                        String settingName = targetSetting.getKey();
+
+                        JsonNode streamSettingValue;
+                        if (settingName.startsWith("/")) {
+                            streamSettingValue = settings.at(settingName);
+                        } else {
+                            streamSettingValue = settings.get(settingName);
+                        }
+                        return streamSettingValue != null &&
+                            !streamSettingValue.isMissingNode() &&
+                            streamSettingValue.asText().equals(targetSetting.getValue());
                     });
             })
             .collect(toImmutableList());
@@ -362,13 +376,27 @@ public class EventStreamConfig {
      *
      * If either this streamName does not have a stream config entry, or
      * the stream config entry does not have setting, this returns null.
+     *
+     * @param streamName name of stream in stream config
+     * @param settingName setting name to get, either top level field name, or JsonPointer
+     *                    starting with '/'.
      */
     public JsonNode getSetting(String streamName, String settingName) {
         JsonNode streamConfigEntry = getStreamConfig(streamName).get(streamName);
+
         if (streamConfigEntry == null) {
             return null;
         } else {
-            return streamConfigEntry.get(settingName);
+            if (settingName.startsWith("/")) {
+                JsonNode result = streamConfigEntry.at(settingName);
+                if (result.isMissingNode()) {
+                    return null;
+                } else {
+                    return result;
+                }
+            } else {
+                return streamConfigEntry.get(settingName);
+            }
         }
     }
 

@@ -1,3 +1,6 @@
+## 1.0.7
+- Support filtering EventStreamConfig by JsonPointer path   
+
 ## 1.0.3
 
 - Add JsonEventGenerator

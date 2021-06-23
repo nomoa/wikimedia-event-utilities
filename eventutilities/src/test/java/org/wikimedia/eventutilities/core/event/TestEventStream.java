@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
@@ -78,7 +79,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void createEventStream() {
+    void createEventStream() {
         String streamName = "mediawiki.page-create";
         EventStream es = eventStreamFactory.createEventStream(streamName);
         assertEquals(
@@ -89,7 +90,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void createEventStreams() {
+    void createEventStreams() {
         List<String> streamNames = Arrays.asList(
             "mediawiki.page-create", "eventlogging_SearchSatisfaction"
         );
@@ -108,7 +109,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void createEventStreamWithRegexName() {
+    void createEventStreamWithRegexName() {
         String streamName = "/mediawiki\\.job\\..+/";
         assertThrows(
             RuntimeException.class, () -> eventStreamFactory.createEventStream(streamName),
@@ -117,7 +118,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void createAllCachedEventStreams() {
+    void createAllCachedEventStreams() {
         // /^mediawiki\\.job\\..+/ should not be included.
         List<String> expectedStreamNames = Arrays.asList(
             "mediawiki.page-create", "eventlogging_SearchSatisfaction", "no_settings"
@@ -125,11 +126,10 @@ public class TestEventStream {
 
         List<EventStream> eventStreams = eventStreamFactory.createAllCachedEventStreams();
 
-        assertEquals(
-            expectedStreamNames.size(),
-            eventStreams.size(),
-            "Should create " + expectedStreamNames.size() + " streams"
-        );
+        Assertions.assertThat(eventStreams)
+            .withFailMessage("Should create " + expectedStreamNames.size() + "streams")
+            .hasSameSizeAs(expectedStreamNames);
+
 
         for (String streamName : expectedStreamNames) {
             EventStream eventStream = eventStreams.stream()
@@ -142,7 +142,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void createEventStreamsMatchingSettings() {
+    void createEventStreamsMatchingSettings() {
         // /^mediawiki\\.job\\..+/ should not be included.
         List<String> expectedStreamNames = Arrays.asList(
             "eventlogging_SearchSatisfaction"
@@ -153,11 +153,10 @@ public class TestEventStream {
             Collections.singletonMap("canary_events_enabled", "true")
         );
 
-        assertEquals(
-            expectedStreamNames.size(),
-            eventStreams.size(),
-            "Should create " + expectedStreamNames.size() + " streams"
-        );
+        Assertions.assertThat(eventStreams)
+            .withFailMessage("Should create " + expectedStreamNames.size() + "streams")
+            .hasSameSizeAs(expectedStreamNames);
+
 
         for (String streamName : expectedStreamNames) {
             EventStream eventStream = eventStreams.stream()
@@ -170,14 +169,41 @@ public class TestEventStream {
     }
 
     @Test
-    public void streamName() {
+    void createEventStreamsMatchingSettingsJsonPointer() {
+        List<String> expectedStreamNames = Arrays.asList(
+                "eventlogging_SearchSatisfaction", "mediawiki.page-create"
+        );
+
+        List<EventStream> eventStreams = eventStreamFactory.createEventStreamsMatchingSettings(
+                null,
+                Collections.singletonMap("/consumers/client_name/job_name", "general")
+        );
+
+        Assertions.assertThat(eventStreams)
+            .withFailMessage("Should create " + expectedStreamNames.size() + "streams")
+            .hasSameSizeAs(expectedStreamNames);
+
+
+
+        for (String streamName : expectedStreamNames) {
+            EventStream eventStream = eventStreams.stream()
+                .filter((es) -> es.streamName() == streamName)
+                .findAny()
+                .orElse(null);
+
+            assertNotNull(eventStream, "Should match settings and create event " + streamName);
+        }
+    }
+
+    @Test
+    void streamName() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         String expected = "mediawiki.page-create";
         assertEquals(expected, es.streamName(), "Should get stream name");
     }
 
     @Test
-    public void topics() {
+    void topics() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         List<String> topics = es.topics();
         List<String> expected = new ArrayList<>(Arrays.asList(
@@ -187,7 +213,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void eventServiceName() {
+    void eventServiceName() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         String eventServiceName = es.eventServiceName();
         String expected = "eventgate-main";
@@ -195,7 +221,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void eventServiceUri() {
+    void eventServiceUri() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         URI eventServiceUri = es.eventServiceUri();
         URI expected = URI.create("https://eventgate-main.discovery.wmnet:4492/v1/events");
@@ -203,7 +229,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void eventServiceDatacenterSpecificUri() {
+    void eventServiceDatacenterSpecificUri() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         URI eventServiceUrl = es.eventServiceUri("eqiad");
         URI expected = URI.create("https://eventgate-main.svc.eqiad.wmnet:4492/v1/events");
@@ -211,7 +237,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void schemaTitle() {
+    void schemaTitle() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         String schemaTitle = es.schemaTitle();
         String expected = "mediawiki/revision/create";
@@ -221,7 +247,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void schemaUri() {
+    void schemaUri() {
         EventStream es = eventStreamFactory.createEventStream("mediawiki.page-create");
         URI schemaUri = es.schemaUri();
         URI expected = URI.create("/mediawiki/revision/create/latest");
@@ -231,7 +257,7 @@ public class TestEventStream {
     }
 
     @Test
-    public void exampleEvent() {
+    void exampleEvent() {
         EventStream es = eventStreamFactory.createEventStream("eventlogging_SearchSatisfaction");
         JsonNode example = es.exampleEvent();
         JsonNode expected = searchSatisfactionSchema.get("examples").get(0);

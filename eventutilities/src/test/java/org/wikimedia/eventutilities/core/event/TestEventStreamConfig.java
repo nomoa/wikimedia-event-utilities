@@ -8,6 +8,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
@@ -20,6 +21,7 @@ import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableList;
 
 public class TestEventStreamConfig {
 
@@ -48,7 +50,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void cachedStreamConfigs() {
+    void cachedStreamConfigs() {
         JsonNode configs = streamConfigs.cachedStreamConfigs();
         assertEquals(
                 testStreamConfigsContent, configs, "Should read and return all stream configs"
@@ -56,14 +58,14 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void getStreamConfig() {
+    void getStreamConfig() {
         JsonNode config = streamConfigs.getStreamConfig("mediawiki.page-create");
         JsonNode expected = testStreamConfigsContent.retain("mediawiki.page-create");
         assertEquals(expected, config, "Should read and return a single stream config");
     }
 
     @Test
-    public void getStreamConfigs() {
+    void getStreamConfigs() {
         JsonNode configs = streamConfigs.getStreamConfigs(
             Arrays.asList("mediawiki.page-create", "eventlogging_SearchSatisfaction")
         );
@@ -74,7 +76,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void cachedStreamNames() {
+    void cachedStreamNames() {
         List<String> streams = streamConfigs.cachedStreamNames();
         Assertions.assertThat(streams)
                 .withFailMessage("Should return all known stream names")
@@ -88,7 +90,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void getSetting() {
+    void getSetting() {
         String settingValue = streamConfigs.getSetting(
             "mediawiki.page-create", "destination_event_service"
         ).asText();
@@ -97,7 +99,16 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void getSettingAsString() {
+    void getSettingJsonPointer() {
+        String settingValue = streamConfigs.getSetting(
+                "mediawiki.page-create", "/consumers/client_name/job_name"
+        ).asText();
+        String expected = "general";
+        assertEquals(expected, settingValue, "Should get a single stream config setting using JsonPointer");
+    }
+
+    @Test
+    void getSettingAsString() {
         String settingValue = streamConfigs.getSettingAsString(
             "mediawiki.page-create", "destination_event_service"
         );
@@ -106,7 +117,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void getSettingForNonExistentStream() {
+    void getSettingForNonExistentStream() {
         JsonNode settingValue = streamConfigs.getSetting(
             "nonexistent-stream", "destination_event_service"
         );
@@ -114,7 +125,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void getSettingForNonExistentSetting() {
+    void getSettingForNonExistentSetting() {
         JsonNode settingValue = streamConfigs.getSetting(
             "mediawiki.page-create", "non-existent-setting"
         );
@@ -122,7 +133,31 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectSetting() {
+    void filterStreamConfigs() {
+        List<String> expectedStreams = Arrays.asList(
+            "eventlogging_SearchSatisfaction"
+        );
+        HashMap<String, String> filters = new HashMap<>();
+        filters.put("destination_event_service", "eventgate-analytics-external");
+        ObjectNode result = streamConfigs.filterStreamConfigs(null, filters);
+        List<String> resultStreamNames = ImmutableList.copyOf(result.fieldNames());
+        assertEquals(expectedStreams, resultStreamNames, "Should filter stream configs on setting name and values");
+    }
+
+    @Test
+    void filterStreamConfigsJsonPointer() {
+        List<String> expectedStreams = Arrays.asList(
+                "mediawiki.page-create", "eventlogging_SearchSatisfaction"
+        );
+        HashMap<String, String> filters = new HashMap<>();
+        filters.put("/consumers/client_name/job_name", "general");
+        ObjectNode result = streamConfigs.filterStreamConfigs(null, filters);
+        List<String> resultStreamNames = ImmutableList.copyOf(result.fieldNames());
+        assertEquals(expectedStreams, resultStreamNames, "Should filter stream configs on setting name as JsonPointer and values");
+    }
+
+    @Test
+    void collectSetting() {
         List<JsonNode> settingValues = streamConfigs.collectSetting(
             "mediawiki.page-create", "topics"
         );
@@ -134,7 +169,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectSettingAsString() {
+    void collectSettingAsString() {
         List<String> settingValues = streamConfigs.collectSettingAsString(
                 "mediawiki.page-create", "topics"
         );
@@ -147,7 +182,7 @@ public class TestEventStreamConfig {
 
 
     @Test
-    public void collectSettings() {
+    void collectSettings() {
         List<JsonNode> settingValues = streamConfigs.collectSettings(
             Arrays.asList("mediawiki.page-create", "eventlogging_SearchSatisfaction"), "topics"
         );
@@ -160,7 +195,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectSettingsAsString() {
+    void collectSettingsAsString() {
         List<String> settingValues = streamConfigs.collectSettingsAsString(
             Arrays.asList("mediawiki.page-create", "eventlogging_SearchSatisfaction"), "topics"
         );
@@ -173,7 +208,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectAllCachedSettings() {
+    void collectAllCachedSettings() {
         List<JsonNode> settingValues = streamConfigs.collectAllCachedSettings("topics");
 
         List<JsonNode> expected = Arrays.asList(
@@ -186,7 +221,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectAllCachedSettingsAsString() {
+    void collectAllCachedSettingsAsString() {
         List<String> settingValues = streamConfigs.collectAllCachedSettingsAsString("topics");
 
         List<String> expected = Arrays.asList(
@@ -199,7 +234,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void collectTopicMatchingSettings() {
+    void collectTopicMatchingSettings() {
         List<String> topics = streamConfigs.collectTopicsMatchingSettings(
             Arrays.asList("mediawiki.page-create", "eventlogging_SearchSatisfaction"),
             Collections.singletonMap("destination_event_service", "eventgate-main")
@@ -226,7 +261,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void eventServiceToUriMap() {
+    void eventServiceToUriMap() {
         assertEquals(
             URI.create("https://eventgate-analytics-external.example.org:4692/v1/events"),
             streamConfigs.getEventServiceUri("eventlogging_SearchSatisfaction"),
@@ -241,7 +276,7 @@ public class TestEventStreamConfig {
     }
 
     @Test
-    public void toRegex() {
+    void toRegex() {
         List<String> strings = Arrays.asList("a", "/^b.+/", "c");
         String expected = "(a|^b.+|c)";
 
