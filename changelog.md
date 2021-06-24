@@ -1,8 +1,18 @@
 ## 1.0.7
-- Support filtering EventStreamConfig by JsonPointer path   
+- Support filtering EventStreamConfig by JsonPointer path
+- BasicHttpClient needs to close the underlying HttpClient.
+- Allow using EventStreamConfig without providing an eventServiceToUriMap
+
+## 1.0.6
+- Fix NPE in BasicHttpResult getBodyAsString
+
+## 1.0.5
+- Fix for BasicHttpClient so that a non 2xx response will fail when used with ResourceLoader
+
+## 1.0.4
+- Add ResourceLoader and BasicHttpClient
 
 ## 1.0.3
-
 - Add JsonEventGenerator
 - Fix few api.php URI for meta.wikimedia.org
 - Add an utility class to validate an event against its schema
