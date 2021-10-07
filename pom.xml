@@ -76,11 +76,6 @@
                 <version>4.4.13</version>
             </dependency>
             <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.6.2</version>
-            </dependency>
-            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.30</version>
@@ -100,6 +95,12 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
+                <version>5.6.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
                 <version>5.6.2</version>
                 <scope>test</scope>
             </dependency>
@@ -127,11 +128,13 @@
                     </configuration>
                     <executions>
                         <execution>
-                              <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                              <goals>
-                                  <goal>single</goal>
-                              </goals>
-                              <phase>package</phase> <!-- bind to the packaging phase -->
+                            <id>make-assembly</id>
+                            <!-- this is used for inheritance merges -->
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <phase>package</phase>
+                            <!-- bind to the packaging phase -->
                         </execution>
                     </executions>
                 </plugin>
