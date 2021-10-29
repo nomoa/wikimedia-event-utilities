@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.EVENT_TIME_FIELD;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.META_FIELD;
+import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.META_ID_FIELD;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.META_INGESTION_TIME_FIELD;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.META_STREAM_FIELD;
 import static org.wikimedia.eventutilities.core.event.JsonEventGenerator.SCHEMA_FIELD;
@@ -14,12 +15,13 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.junit.jupiter.api.Test;
+import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
-import org.wikimedia.eventutilities.core.json.JsonLoader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -30,6 +32,7 @@ public class TestJsonEventGenerator {
     private final String mainStream = "main_stream";
     private final String schema = "/test/event/1.0.0";
     private final JsonEventGenerator generator;
+    private final UUID myUuid = UUID.randomUUID();
 
     public TestJsonEventGenerator() throws URISyntaxException {
         ResourceLoader resourceLoader = ResourceLoader.builder()
@@ -47,6 +50,7 @@ public class TestJsonEventGenerator {
                 .schemaLoader(schemaLoader)
                 .eventStreamConfig(streamConfig)
                 .ingestionTimeClock(() -> ingestionTime)
+                .withUuidSupplier(() -> myUuid)
                 .build();
     }
 
@@ -66,11 +70,11 @@ public class TestJsonEventGenerator {
         assertNotNull(meta);
         assertEquals(ingestionTime.toString(), meta.get(META_INGESTION_TIME_FIELD).textValue());
         assertEquals(mainStream, meta.get(META_STREAM_FIELD).textValue());
+        assertEquals(this.myUuid.toString(), meta.get(META_ID_FIELD).textValue());
 
         assertEquals("some value", event.get("test").textValue());
         JsonNode map = event.get("test_map");
         assertEquals("bar", map.get("foo").textValue());
-
         assertEquals(eventTime.toString(), event.get(EVENT_TIME_FIELD).textValue());
     }
 
@@ -84,6 +88,7 @@ public class TestJsonEventGenerator {
             meta.put(META_INGESTION_TIME_FIELD, customIngestionTime.toString());
             // customStream will be ignored
             meta.put(META_STREAM_FIELD, customStream);
+            meta.put(META_ID_FIELD, "real_id");
             root.put(EVENT_TIME_FIELD, customEventTime.toString());
             ObjectNode someMap = root.putObject("test_map");
             root.put("test", "some value");
@@ -100,6 +105,7 @@ public class TestJsonEventGenerator {
         assertNotNull(meta);
         assertEquals(customIngestionTime.toString(), meta.get(META_INGESTION_TIME_FIELD).textValue());
         assertEquals(mainStream, meta.get(META_STREAM_FIELD).textValue());
+        assertEquals("real_id", meta.get(META_ID_FIELD).textValue());
 
         assertEquals(customEventTime.toString(), event.get(EVENT_TIME_FIELD).textValue());
     }
@@ -168,7 +174,7 @@ public class TestJsonEventGenerator {
                 "\"test_map\":{\"foo\":\"bar\"}," +
                 "\"dt\":\"1970-01-01T00:00:01Z\"," +
                 "\"$schema\":\"/test/event/1.0.0\"," +
-                "\"meta\":{\"dt\":\"1970-01-01T00:00:02Z\",\"stream\":\"main_stream\"}}";
+                "\"meta\":{\"dt\":\"1970-01-01T00:00:02Z\",\"id\":\"" + this.myUuid + "\",\"stream\":\"main_stream\"}}";
         assertEquals(actualJson, new String(generator.serializeAsBytes(event), StandardCharsets.UTF_8));
     }
 }

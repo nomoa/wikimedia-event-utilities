@@ -79,6 +79,7 @@ EventStreamConfig streamConfig = EventStreamConfig.builder()
 JsonEventGenerator generator = JsonEventGenerator.builder()
         .schemaLoader(new EventSchemaLoader(WikimediaDefaults.SCHEMA_BASE_URIS))
         .eventStreamConfig(streamConfig)
+        .withUuidSupplier(UUID::randomUUID)
         .build();
 
 Consumer<ObjectNode> eventCreator = root -> {

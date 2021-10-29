@@ -6,6 +6,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -46,11 +47,13 @@ public final class JsonEventGenerator {
     public static final String META_FIELD = "meta";
     public static final String META_STREAM_FIELD = "stream";
     public static final String META_INGESTION_TIME_FIELD = "dt";
+    public static final String META_ID_FIELD = "id";
 
     private final EventSchemaLoader schemaLoader;
     private final EventStreamConfig eventStreamConfig;
     private final Supplier<Instant> ingestionTimeClock;
     private final ObjectMapper jsonMapper;
+    private final Supplier<UUID> uuidSupplier;
     /**
      * cache of the JsonSchema whose schema/stream pair was already verified against the stream configuration.
      */
@@ -59,11 +62,13 @@ public final class JsonEventGenerator {
     private JsonEventGenerator(EventSchemaLoader schemaLoader,
                                EventStreamConfig eventStreamConfig,
                                Supplier<Instant> ingestionTimeClock,
-                               ObjectMapper jsonMapper) {
+                               ObjectMapper jsonMapper,
+                               Supplier<UUID> uuidSupplier) {
         this.schemaLoader = Objects.requireNonNull(schemaLoader);
         this.eventStreamConfig = Objects.requireNonNull(eventStreamConfig);
         this.ingestionTimeClock = Objects.requireNonNull(ingestionTimeClock);
         this.jsonMapper = Objects.requireNonNull(jsonMapper);
+        this.uuidSupplier = uuidSupplier;
     }
 
     /**
@@ -93,7 +98,8 @@ public final class JsonEventGenerator {
      * @throws IllegalArgumentException if the schema cannot be found/loaded
      * @throws IllegalArgumentException if the event is not valid against the provided schema
      */
-    public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData, @Nullable Instant eventTime, boolean validate) {
+    public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData,
+                                    @Nullable Instant eventTime, boolean validate) {
         Objects.requireNonNull(stream, "stream must not be null");
         Objects.requireNonNull(schema, "schema must not be null");
         ObjectNode root = jsonMapper.createObjectNode();
@@ -122,11 +128,21 @@ public final class JsonEventGenerator {
             // ingestionTimeClock cannot be null
             meta.put(META_INGESTION_TIME_FIELD, ingestionTimeClock.get().toString());
         }
+        if (!meta.has(META_ID_FIELD)) {
+            meta.put(META_ID_FIELD, uuidSupplier.get().toString());
+        }
         // Like the schema field the stream field is always overridden
         meta.put(META_STREAM_FIELD, stream);
 
-        JsonSchema eventSchema = loadAndVerifyJsonSchema(stream, schema, root);
 
+        if (validate) {
+            JsonSchema eventSchema = loadAndVerifyJsonSchema(stream, schema, root);
+            validateEvent(root, eventSchema);
+        }
+        return root;
+    }
+
+    private void validateEvent(ObjectNode root, JsonSchema eventSchema) {
         ProcessingReport report;
         try {
             report = eventSchema.validate(root);
@@ -136,7 +152,6 @@ public final class JsonEventGenerator {
         if (!report.isSuccess()) {
             throw new IllegalArgumentException("Cannot validate the generated event");
         }
-        return root;
     }
 
     private JsonSchema loadAndVerifyJsonSchema(String stream, String schema, ObjectNode root) {
@@ -225,6 +240,7 @@ public final class JsonEventGenerator {
         private EventStreamConfig eventStreamConfig;
         private Supplier<Instant> ingestionTimeClock;
         private ObjectMapper jsonMapper;
+        private Supplier<UUID> uuidSupplier;
 
         private Builder() {}
 
@@ -245,6 +261,11 @@ public final class JsonEventGenerator {
 
         public Builder eventStreamConfig(EventStreamConfig eventStreamConfig) {
             this.eventStreamConfig = Objects.requireNonNull(eventStreamConfig);
+            return this;
+        }
+
+        public Builder withUuidSupplier(Supplier<UUID> uuidSupplier) {
+            this.uuidSupplier = uuidSupplier;
             return this;
         }
 
@@ -270,7 +291,8 @@ public final class JsonEventGenerator {
                 schemaLoader,
                 eventStreamConfig,
                 ingestionTimeClock,
-                jsonMapper != null ? jsonMapper : new ObjectMapper()
+                jsonMapper != null ? jsonMapper : new ObjectMapper(),
+                this.uuidSupplier != null ? this.uuidSupplier : UUID::randomUUID
             );
         }
     }
