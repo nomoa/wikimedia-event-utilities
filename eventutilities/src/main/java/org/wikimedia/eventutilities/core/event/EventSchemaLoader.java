@@ -1,6 +1,9 @@
 package org.wikimedia.eventutilities.core.event;
 
+import static java.util.Objects.requireNonNull;
+
 import java.net.URI;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,11 +124,8 @@ public class EventSchemaLoader {
      * Extracts the value at schemaFieldPointer from the event as a URI.
      */
     public URI extractSchemaUri(JsonNode event) {
-        String uriString = event.at(schemaFieldPointer).textValue();
-        Preconditions.checkNotNull(
-                uriString,
-                "Could not extract %s field from event, field does not exist", schemaFieldPointer
-        );
+        String uriString = requireNonNull(event.at(schemaFieldPointer).textValue(),
+                () -> String.format(Locale.ROOT, "Could not extract %s field from event, field does not exist", schemaFieldPointer));
         try {
             return new URI(uriString);
         } catch (java.net.URISyntaxException e) {
