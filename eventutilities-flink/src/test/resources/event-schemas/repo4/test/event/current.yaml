@@ -10,6 +10,10 @@ allOf:
         type: string
         default: default value
 
+      test_int:
+        type: integer
+        default: 2
+
       test_map:
         description: >
           We want to support 'map' types using additionalProperties to specify
@@ -30,8 +34,7 @@ allOf:
 
       test_array:
         type: array
-        description: >
-          Array with items schema
+        description: Array with items schema
         items:
           type: object
           properties:
@@ -46,6 +49,7 @@ examples:
       stream: test.event.example
       dt: '2019-01-01T00:00:00Z'
     test: specific test value
+    test_int: 2
     test_map:
       key1: val1
       key2: val2

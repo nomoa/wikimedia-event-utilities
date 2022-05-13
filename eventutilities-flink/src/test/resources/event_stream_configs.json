@@ -1,0 +1,6 @@
+{
+  "test.event.example": {
+    "schema_title": "test/event",
+    "topics": ["eqiad.test.event.example", "codfw.test.event.example"]
+  }
+}

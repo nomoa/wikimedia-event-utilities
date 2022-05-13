@@ -1,4 +1,6 @@
 ## 1.0.11
+- Add flink module and JsonSchemaConverter for Flink Table API
+- Add builder helper methods to EventStreamFactory for easier use
 - Add WikimediaExternalDefaults for testing in repl outside WMF production
 
 ## 1.0.9

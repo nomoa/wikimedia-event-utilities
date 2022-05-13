@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -51,6 +52,11 @@ public class TestEventStream {
             put("eventgate-logging-external-codfw", URI.create("https://eventgate-logging-external.svc.codfw.wmnet:4392/v1/events"));
         }};
 
+    private static final String eventServiceToUriMapFile =
+        "file://" + new File("src/test/resources/event_service_to_uri.yaml").getAbsolutePath();
+
+
+
 
     private static final JsonLoader jsonLoader = new JsonLoader(
         ResourceLoader.builder()
@@ -75,6 +81,24 @@ public class TestEventStream {
         // Read expected some data in for assertions
         searchSatisfactionSchema = jsonLoader.load(
             URI.create(schemaBaseUrls.get(0) + "/analytics/legacy/searchsatisfaction/latest")
+        );
+    }
+
+    @Test
+    void eventStreamFactoryFrom() {
+        // Simple test of the from factory method.
+        EventStreamFactory eventStreamFactoryForTest = EventStreamFactory.from(
+            schemaBaseUrls.stream().map(URL::toString).collect(Collectors.toList()),
+            testStreamConfigsFile,
+            null,
+            eventServiceToUriMapFile
+        );
+
+        assertEquals(
+            eventStreamFactory.createEventStream("mediawiki.page-create").toString(),
+            eventStreamFactoryForTest.createEventStream("mediawiki.page-create").toString(),
+            "EventStream created by EventStreamFactory via of method should be the " +
+            "same as the one created by EventStreamFactory builder"
         );
     }
 

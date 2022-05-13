@@ -16,6 +16,7 @@
 
     <modules>
         <module>eventutilities</module>
+        <module>eventutilities-flink</module>
     </modules>
 
     <scm>
@@ -31,6 +32,8 @@
 
     <properties>
         <developerConnection>scm:git:ssh://${user.name}@gerrit.wikimedia.org:29418/wikimedia-event-utilities</developerConnection>
+        <flink.version>1.15.0</flink.version>
+        <scala.compat.version>2.12</scala.compat.version>
     </properties>
 
     <dependencyManagement>
@@ -61,6 +64,11 @@
                 <version>2.2.10</version>
             </dependency>
             <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.2</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>28.1-jre</version>
@@ -85,11 +93,61 @@
                 <artifactId>http-client-utils</artifactId>
                 <version>1.0.0</version>
             </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-core</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-common</artifactId>
+                <version>${flink.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
             <dependency>
                 <groupId>com.github.tomakehurst</groupId>
                 <artifactId>wiremock</artifactId>
                 <version>2.27.1</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-runtime</artifactId>
+                <version>${flink.version}</version>
+                <classifier>tests</classifier>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-streaming-java</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-api-java</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-api-java-bridge</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-table-planner_${scala.compat.version}</artifactId>
+                <version>${flink.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.flink</groupId>
+                <artifactId>flink-test-utils</artifactId>
+                <version>${flink.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -105,11 +163,18 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.junit.platform</groupId>
+                <artifactId>junit-platform-commons</artifactId>
+                <version>1.8.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>1.7.30</version>
                 <scope>test</scope>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 

@@ -95,7 +95,7 @@ public class EventStreamConfig {
     }
 
     /**
-     * EventStreamConfigBuilder, builder pattern to construct
+     * Builder, builder pattern to construct
      * EventStreamConfig instances.  Usage:
      *
      *  EventStreamConfig c = EventStreamConfig.builder()
@@ -103,38 +103,38 @@ public class EventStreamConfig {
      *      .setEventServiceToUriMap("file:///path/to/event_service_map.yaml")
      *      .build()
      */
-    public static class EventStreamConfigBuilder {
+    public static class Builder {
         private EventStreamConfigLoader eventStreamConfigLoader;
         private String eventStreamConfigLoaderUri;
         private Map<String, URI> eventServiceToUriMap;
         private String eventServiceToUriMapUri;
         private JsonLoader jsonLoader;
 
-        public EventStreamConfigBuilder setEventStreamConfigLoader(EventStreamConfigLoader eventStreamConfigLoader) {
+        public Builder setEventStreamConfigLoader(EventStreamConfigLoader eventStreamConfigLoader) {
             this.eventStreamConfigLoader = eventStreamConfigLoader;
             this.eventStreamConfigLoaderUri = null;
             return this;
         }
 
-        public EventStreamConfigBuilder setEventStreamConfigLoader(String streamConfigUri) {
+        public Builder setEventStreamConfigLoader(String streamConfigUri) {
             this.eventStreamConfigLoaderUri = streamConfigUri;
             this.eventStreamConfigLoader = null;
             return this;
         }
 
-        public EventStreamConfigBuilder setEventServiceToUriMap(Map<String, URI> eventServiceToUriMap) {
+        public Builder setEventServiceToUriMap(Map<String, URI> eventServiceToUriMap) {
             this.eventServiceToUriMap = eventServiceToUriMap;
             this.eventServiceToUriMapUri = null;
             return this;
         }
 
-        public EventStreamConfigBuilder setEventServiceToUriMap(String eventServiceToUriMapUri) {
+        public Builder setEventServiceToUriMap(String eventServiceToUriMapUri) {
             this.eventServiceToUriMapUri = eventServiceToUriMapUri;
             this.eventServiceToUriMap = null;
             return this;
         }
 
-        public EventStreamConfigBuilder setJsonLoader(JsonLoader jsonLoader) {
+        public Builder setJsonLoader(JsonLoader jsonLoader) {
             this.jsonLoader = jsonLoader;
             return this;
         }
@@ -224,10 +224,10 @@ public class EventStreamConfig {
     }
 
     /**
-     * Returns an EventStreamConfigBuilder instance.
+     * Returns an Builder instance.
      */
-    public static EventStreamConfigBuilder builder() {
-        return new EventStreamConfigBuilder();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
