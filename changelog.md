@@ -1,5 +1,7 @@
-## 1.0.11
-- Add flink module and JsonSchemaConverter for Flink Table API
+## 1.1.0
+- Add flink module
+- Add JsonSchemaConverter for Flink Table API schema conversion
+- Add EventTableDescriptorBuilder to aid in constructing Flink Tables from Wikimedia EventStreams
 - Add builder helper methods to EventStreamFactory for easier use
 - Add WikimediaExternalDefaults for testing in repl outside WMF production
 

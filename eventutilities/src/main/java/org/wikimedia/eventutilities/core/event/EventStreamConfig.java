@@ -551,7 +551,7 @@ public class EventStreamConfig {
     }
 
     /**
-     * Get all topics settings for the a single stream.
+     * Get all topics settings for a single stream.
      */
     public List<String> getTopics(String streamName) {
         return collectSettingAsString(streamName, TOPICS_SETTING);
