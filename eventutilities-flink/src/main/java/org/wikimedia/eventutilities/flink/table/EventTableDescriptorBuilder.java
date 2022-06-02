@@ -224,6 +224,15 @@ public class EventTableDescriptorBuilder {
      * You must first call eventStream() before calling this method so that
      * it can fill in the details for the connector from the EventStream.
      *
+     * Note: The Kafka Table Connector option scan.start.mode will not be set,
+     * relying on the default value of "group-offsets".
+     * The Kafka consumer property auto.offset.reset will be set to "latest",
+     * which will be used in the case that there are no committed group offsets.
+     * Override this behavior by calling e.g.
+     * <code>
+     * option("properties.auto.offset.reset", "earliest")
+     * </code>
+     *
      * @param bootstrapServers
      *  Kafka bootstrap.servers property.
      *
@@ -266,6 +275,7 @@ public class EventTableDescriptorBuilder {
         option("properties.bootstrap.servers", bootstrapServers);
         option("topic", String.join(";", eventStream.topics()));
         option("properties.group.id", consumerGroup);
+        option("properties.auto.offset.reset", "latest");
 
         return this;
     }
