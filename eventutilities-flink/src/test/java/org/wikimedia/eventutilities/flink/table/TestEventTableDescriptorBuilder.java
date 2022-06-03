@@ -73,8 +73,7 @@ public class TestEventTableDescriptorBuilder {
             .eventStream(streamName)
             .setupKafka(
                 "localhost:9092",
-                "my_consumer_group",
-                true
+                "my_consumer_group"
             )
             .build();
 
@@ -91,13 +90,36 @@ public class TestEventTableDescriptorBuilder {
 
         Schema expectedSchema =
             JsonSchemaConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
+                .build();
+
+        assertThat(td.getSchema().get())
+            .isEqualTo(expectedSchema);
+    }
+
+    @Test
+    void testWithKafkaTimestampAsWatermark() {
+        EventStreamFactory eventStreamFactory = builder.getEventStreamFactory();
+        EventStream eventStream = eventStreamFactory.createEventStream(streamName);
+
+        TableDescriptor td = builder
+            .eventStream(streamName)
+            .setupKafka(
+                "localhost:9092",
+                "my_consumer_group"
+            )
+            .withKafkaTimestampAsWatermark()
+            .build();
+
+        Schema expectedSchema =
+            JsonSchemaConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
                 .columnByMetadata(
                     "kafka_timestamp",
                     "TIMESTAMP_LTZ(3) NOT NULL",
                     "timestamp",
                     true)
-                .watermark("kafka_timestamp", "kafka_timestamp")
+                .watermark("kafka_timestamp", "kafka_timestamp - INTERVAL '10' SECOND")
                 .build();
+
         List<String> expectedColumnNames = expectedSchema.getColumns().stream()
             .map(Schema.UnresolvedColumn::getName).collect(Collectors.toList());
 
@@ -107,6 +129,7 @@ public class TestEventTableDescriptorBuilder {
         // Adding a watermark column causes the Schemas not to be ==,
         // so just compare the column names instead.
         assertThat(columnNames).isEqualTo(expectedColumnNames);
+
     }
 
     @Test
@@ -139,11 +162,11 @@ public class TestEventTableDescriptorBuilder {
 
     @Test
     void testSetupKafkaPreconditions() {
-        assertThatIllegalStateException().isThrownBy(() -> {
+        assertThatIllegalStateException()
+            .isThrownBy(() -> {
             builder.setupKafka(
                 "localhost:9092",
-                "my_consumer_group",
-                true
+                "my_consumer_group"
             );
         })
         .withFailMessage("Must call eventStream before setupKafka");

@@ -115,7 +115,7 @@ public final class JsonSchemaConverter {
         if (jsonSchema.hasNonNull(TITLE)) {
             schemaName = jsonSchema.get(TITLE).textValue();
         } else {
-            schemaName = "Unknown JSONSchema";
+            schemaName = "Untitled JSONSchema";
         }
 
         String jsonSchemaType = getJsonSchemaType(jsonSchema, schemaName);

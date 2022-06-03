@@ -233,20 +233,21 @@ public class EventTableDescriptorBuilder {
      * option("properties.auto.offset.reset", "earliest")
      * </code>
      *
+     * This does not set the key format or hoist any metadata fields
+     * (like kafka_timestamp) into the schema.
+     * See withKafkaTimestampAsWatermark to help use the kafka timestamp
+     * as the watermark.
+     *
      * @param bootstrapServers
      *  Kafka bootstrap.servers property.
      *
      * @param consumerGroup
      *  Kafka consumer.group.id property.
      *
-     * @param withKafkaTimestampAsWatermark
-     *  If true, a virtual "kafka_timestamp" field will be added to the
-     *  Schema and used as the watermark.
      */
     public EventTableDescriptorBuilder setupKafka(
         String bootstrapServers,
-        String consumerGroup,
-        Boolean withKafkaTimestampAsWatermark
+        String consumerGroup
     ) {
         Preconditions.checkState(
             this.eventStream != null,
@@ -257,27 +258,82 @@ public class EventTableDescriptorBuilder {
         // EventStreams in Kafka are JSON.
         format("json");
 
-        if (withKafkaTimestampAsWatermark) {
-            Schema.Builder sb = getSchemaBuilder();
-            sb.columnByMetadata(
-                    "kafka_timestamp",
-                    "TIMESTAMP_LTZ(3) NOT NULL",
-                    "timestamp",
-                    true
-                )
-                .watermark(
-                    "kafka_timestamp",
-                    "kafka_timestamp"
-                );
-            schemaBuilder(sb);
-        }
-
         option("properties.bootstrap.servers", bootstrapServers);
         option("topic", String.join(";", eventStream.topics()));
         option("properties.group.id", consumerGroup);
         option("properties.auto.offset.reset", "latest");
 
         return this;
+    }
+
+    /**
+     * Adds a "kafka_timestamp" column to the schema and uses
+     * it as the watermark field with a default watermark delay of 10 seconds.
+     */
+    public EventTableDescriptorBuilder withKafkaTimestampAsWatermark() {
+        return withKafkaTimestampAsWatermark(
+            "kafka_timestamp",
+            10
+        );
+    }
+
+    /**
+     * Adds kafka timestamp as a virtual column to the schema,
+     * and uses it as the watermark with a delay of watermarkDelaySeconds.
+     *
+     * @param columnName
+     *  Name of the timestamp column to add to the schema.
+
+     * @param watermarkDelaySeconds
+     *  Seconds to delay the watermark by.
+     *
+     */
+    public EventTableDescriptorBuilder withKafkaTimestampAsWatermark(
+        @Nonnull String columnName,
+        int watermarkDelaySeconds
+    ) {
+        String watermarkExpression;
+
+        if (watermarkDelaySeconds == 0) {
+            watermarkExpression = columnName;
+        } else {
+            watermarkExpression = columnName + " - INTERVAL '" + watermarkDelaySeconds + "' SECOND";
+        }
+
+        return withKafkaTimestampAsWatermark(
+            columnName,
+            watermarkExpression
+        );
+    }
+
+    /**
+     * Adds kafka timestamp as a virtual column to the schema,
+     * and uses it as the watermark.
+     * See also
+     * https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/table/api/Schema.Builder.html#watermark-java.lang.String-java.lang.String-
+     *
+     * @param columnName
+     *  Name of the column to add to the schema.
+     *
+     * @param sqlExpression
+     *  SQL expression to use for the watermark.
+     *  This should probably refer to the columnName, e.g. "$columnName - INTERVAL '30' seconds"
+     *
+     */
+    public EventTableDescriptorBuilder withKafkaTimestampAsWatermark(
+        @Nonnull String columnName,
+        @Nonnull String sqlExpression
+    ) {
+        Schema.Builder sb = getSchemaBuilder();
+        sb.columnByMetadata(
+            columnName,
+            "TIMESTAMP_LTZ(3) NOT NULL",
+            "timestamp",
+            true
+        )
+        .watermark(columnName, sqlExpression);
+
+        return schemaBuilder(sb);
     }
 
     /**
