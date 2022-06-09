@@ -36,7 +36,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
  * - initialization of default values
  *   - meta.dt as the kafka ingestion time with the provided clock
  *   - meta.stream
- *   - dt as an yet optional event time provided via a param
+ *   - dt as a yet optional event time provided via a param
  *   - $schema as the schema that can validate the generated event
  * - verification of schema vs stream
  * - validation of the event against its schema
@@ -59,11 +59,13 @@ public final class JsonEventGenerator {
      */
     private final Cache<SchemaStreamNamesPair, JsonSchema> schemaCache = CacheBuilder.newBuilder().build();
 
-    private JsonEventGenerator(EventSchemaLoader schemaLoader,
-                               EventStreamConfig eventStreamConfig,
-                               Supplier<Instant> ingestionTimeClock,
-                               ObjectMapper jsonMapper,
-                               Supplier<UUID> uuidSupplier) {
+    private JsonEventGenerator(
+        EventSchemaLoader schemaLoader,
+        EventStreamConfig eventStreamConfig,
+        Supplier<Instant> ingestionTimeClock,
+        ObjectMapper jsonMapper,
+        Supplier<UUID> uuidSupplier
+    ) {
         this.schemaLoader = Objects.requireNonNull(schemaLoader);
         this.eventStreamConfig = Objects.requireNonNull(eventStreamConfig);
         this.ingestionTimeClock = Objects.requireNonNull(ingestionTimeClock);
@@ -82,12 +84,17 @@ public final class JsonEventGenerator {
      * @throws IllegalArgumentException if the schema cannot be found/loaded
      * @throws IllegalArgumentException if the event is not valid against the provided schema
      */
-    public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData, @Nullable Instant eventTime) {
+    public ObjectNode generateEvent(
+        String stream,
+        String schema,
+        Consumer<ObjectNode> eventData,
+        @Nullable Instant eventTime
+    ) {
         return generateEvent(stream, schema, eventData, eventTime, true);
     }
 
     /**
-     * Generates an json event calling the supplier eventData.
+     * Generates a json event calling the supplier eventData.
      *
      * @param stream the stream this event will be pushed to
      * @param schema the schema this event is build against
@@ -98,8 +105,13 @@ public final class JsonEventGenerator {
      * @throws IllegalArgumentException if the schema cannot be found/loaded
      * @throws IllegalArgumentException if the event is not valid against the provided schema
      */
-    public ObjectNode generateEvent(String stream, String schema, Consumer<ObjectNode> eventData,
-                                    @Nullable Instant eventTime, boolean validate) {
+    public ObjectNode generateEvent(
+        String stream,
+        String schema,
+        Consumer<ObjectNode> eventData,
+        @Nullable Instant eventTime,
+        boolean validate
+    ) {
         Objects.requireNonNull(stream, "stream must not be null");
         Objects.requireNonNull(schema, "schema must not be null");
         ObjectNode root = jsonMapper.createObjectNode();
@@ -133,7 +145,6 @@ public final class JsonEventGenerator {
         }
         // Like the schema field the stream field is always overridden
         meta.put(META_STREAM_FIELD, stream);
-
 
         if (validate) {
             JsonSchema eventSchema = loadAndVerifyJsonSchema(stream, schema, root);
@@ -201,13 +212,20 @@ public final class JsonEventGenerator {
         }
     }
 
-    private void checkSchemaTitleAndStream(JsonNode eventSchema, String stream, String schemaName) {
+    private void checkSchemaTitleAndStream(
+        JsonNode eventSchema,
+        String stream,
+        String schemaName
+    ) {
         JsonNode schemaTitle = eventSchema.get("title");
         if (schemaTitle == null || schemaTitle.getNodeType() != JsonNodeType.STRING) {
             throw new IllegalArgumentException("Missing or invalid title for schema [" + schemaName + "]");
         }
 
-        List<String> allowedTitles = eventStreamConfig.collectSettingAsString(stream, EventStreamConfig.SCHEMA_TITLE_SETTING);
+        List<String> allowedTitles = eventStreamConfig.collectSettingAsString(
+            stream,
+            EventStreamConfig.SCHEMA_TITLE_SETTING
+        );
         if (allowedTitles.isEmpty()) {
             throw new IllegalArgumentException("Cannot find any schema titles for stream [" + stream + "]");
         }
@@ -224,7 +242,10 @@ public final class JsonEventGenerator {
      */
     public byte[] serializeAsBytes(ObjectNode root) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        JsonGenerator generator = jsonMapper.getFactory().createGenerator(byteArrayOutputStream, JsonEncoding.UTF8);
+        JsonGenerator generator = jsonMapper.getFactory().createGenerator(
+            byteArrayOutputStream,
+            JsonEncoding.UTF8
+        );
         root.serialize(generator, jsonMapper.getSerializerProviderInstance());
         generator.flush();
         generator.close();
