@@ -10,7 +10,7 @@ import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.TableDescriptor;
 import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
-import org.wikimedia.eventutilities.flink.formats.json.JsonSchemaConverter;
+import org.wikimedia.eventutilities.flink.formats.json.JsonSchemaFlinkConverter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
@@ -353,7 +353,7 @@ public class EventTableDescriptorBuilder {
         );
 
         if (this._schemaBuilder == null) {
-            this._schemaBuilder = JsonSchemaConverter.toSchemaBuilder(
+            this._schemaBuilder = JsonSchemaFlinkConverter.toSchemaBuilder(
                 (ObjectNode)eventStream.schema()
             );
         }

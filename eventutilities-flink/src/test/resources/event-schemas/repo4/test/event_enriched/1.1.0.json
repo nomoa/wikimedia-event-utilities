@@ -1,0 +1,111 @@
+{
+  "title": "test/event_enriched",
+  "description": "Schema used for simple tests",
+  "$id": "/test/event_enriched/1.1.0",
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "examples": [
+    {
+      "$schema": "/test/event_enriched/1.1.0",
+      "meta": {
+        "stream": "test.event.example",
+        "dt": "2019-01-01T00:00:00Z"
+      },
+      "test": "specific test value",
+      "test_int": 2,
+      "test_map": {
+        "key1": "val1",
+        "key2": "val2"
+      }
+    }
+  ],
+  "required": [
+    "$schema",
+    "meta"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "A URI identifying the JSONSchema for this event. This should match an schema's $id in a schema repository. E.g. /schema/title/1.0.0\n"
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "dt",
+        "stream"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri-reference",
+          "maxLength": 8192,
+          "description": "Unique URI identifying the event or entity"
+        },
+        "request_id": {
+          "type": "string",
+          "description": "Unique ID of the request that caused the event"
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique ID of this event"
+        },
+        "dt": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 128,
+          "description": "UTC event datetime, in ISO-8601 format"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Domain the event or entity pertains to",
+          "minLength": 1
+        },
+        "stream": {
+          "type": "string",
+          "description": "Name of the stream/queue/dataset that this event belongs in",
+          "minLength": 1
+        }
+      }
+    },
+    "test": {
+      "type": "string",
+      "default": "default value"
+    },
+    "test_int": {
+      "type": "integer",
+      "default": 2
+    },
+    "test_map": {
+      "description": "We want to support 'map' types using additionalProperties to specify the value types.  (Keys are always strings.) A map that has concrete properties specified is still a map. The concrete properties can be used for validation or to require that certain keys exist in the map. The concrete properties will not be considered part of the schema. The concrete properties MUST match the additionalProperties (map value) schema.\n",
+      "type": "object",
+      "required": [
+        "key1"
+      ],
+      "additionalProperties": {
+        "type": "string"
+      },
+      "properties": {
+        "key1": {
+          "type": "string"
+        }
+      }
+    },
+    "test_array": {
+      "type": "array",
+      "description": "Array with items schema",
+      "items": {
+        "type": "object",
+        "properties": {
+          "prop1": {
+            "type": "string",
+            "description": "prop 1 field in complex array items"
+          }
+        }
+      }
+    },
+    "enriched_field": {
+      "type": "string",
+      "description": "A new field for enrichment"
+    }
+  }
+}

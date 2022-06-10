@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
-import org.wikimedia.eventutilities.flink.formats.json.JsonSchemaConverter;
+import org.wikimedia.eventutilities.flink.formats.json.JsonSchemaFlinkConverter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
@@ -58,7 +58,7 @@ public class TestEventTableDescriptorBuilder {
         assertThat(td.getOptions().get("number-of-rows"))
             .isEqualTo("10");
 
-        Schema expectedSchema = JsonSchemaConverter.toSchemaBuilder((ObjectNode)eventStream.schema()).build();
+        Schema expectedSchema = JsonSchemaFlinkConverter.toSchemaBuilder((ObjectNode)eventStream.schema()).build();
 
         assertThat(td.getSchema().get())
             .isEqualTo(expectedSchema);
@@ -89,7 +89,7 @@ public class TestEventTableDescriptorBuilder {
             .isEqualTo(String.join(";", eventStream.topics()));
 
         Schema expectedSchema =
-            JsonSchemaConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
+            JsonSchemaFlinkConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
                 .build();
 
         assertThat(td.getSchema().get())
@@ -111,7 +111,7 @@ public class TestEventTableDescriptorBuilder {
             .build();
 
         Schema expectedSchema =
-            JsonSchemaConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
+            JsonSchemaFlinkConverter.toSchemaBuilder((ObjectNode)eventStream.schema())
                 .columnByMetadata(
                     "kafka_timestamp",
                     "TIMESTAMP_LTZ(3) NOT NULL",
