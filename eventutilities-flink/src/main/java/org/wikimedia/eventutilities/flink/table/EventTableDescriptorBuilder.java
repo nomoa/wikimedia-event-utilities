@@ -40,7 +40,7 @@ import com.google.common.base.Preconditions;
  * Examples:
  *
  * Instantiate a EventTableDescriptorBuilder from URIs:
- * <code>
+ * <pre>{@code
  *     EventTableDescriptorBuilder builder = EventTableDescriptorBuilder.from(
  *          Arrays.asList(
  *              "https://schema.wikimedia.org/repositories/primary/jsonschema",
@@ -48,10 +48,10 @@ import com.google.common.base.Preconditions;
  *          ),
  *          "https://meta.wikimedia.org/w/api.php"
  *     );
- * </code>
+ * }</pre>
  *
  * Build a DataGen Table:
- * <code>
+ * <pre>{@code
  *     Table t = tableEnv.from(
  *          builder
  *              .connector("datagen")
@@ -60,10 +60,10 @@ import com.google.common.base.Preconditions;
  *              .build()
 *           )
  *     );
- * </code>
+ * }</pre>
  *
  * Build a Kafka Table:
- * <code>
+ * <pre>{@code
  *     Table t = tableEnv.from(
  *          builder
  *              .eventStream("mediawiki.page-create")
@@ -75,7 +75,7 @@ import com.google.common.base.Preconditions;
  *              .build()
  *           )
  *     );
- * </code>
+ * }</pre>
  *
  */
 public class EventTableDescriptorBuilder {
@@ -229,9 +229,7 @@ public class EventTableDescriptorBuilder {
      * The Kafka consumer property auto.offset.reset will be set to "latest",
      * which will be used in the case that there are no committed group offsets.
      * Override this behavior by calling e.g.
-     * <code>
-     * option("properties.auto.offset.reset", "earliest")
-     * </code>
+     * {@code option("properties.auto.offset.reset", "earliest")}
      *
      * This does not set the key format or hoist any metadata fields
      * (like kafka_timestamp) into the schema.
@@ -309,8 +307,7 @@ public class EventTableDescriptorBuilder {
     /**
      * Adds kafka timestamp as a virtual column to the schema,
      * and uses it as the watermark.
-     * See also
-     * https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/table/api/Schema.Builder.html#watermark-java.lang.String-java.lang.String-
+     * See also {@link Schema.Builder#watermark(String, String)}
      *
      * @param columnName
      *  Name of the column to add to the schema.
@@ -340,8 +337,8 @@ public class EventTableDescriptorBuilder {
      * Use this to get the schemaBuilder for the eventStream
      * in order to augment and reset it before calling build().
      * If you change the Schema.Builder, make sure you call
-     * schemaBuilder(modifiedSchemaBuilder) to apply your changes
-     * before calling build().
+     * {@code schemaBuilder(modifiedSchemaBuilder)} to apply your changes
+     * before calling {@code build()}.
      *
      * @return
      *  The Schema.Builder that will be used to build the Table Schema.

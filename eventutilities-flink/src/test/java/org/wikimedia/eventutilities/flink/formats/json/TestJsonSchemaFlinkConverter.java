@@ -6,19 +6,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Callable;
 
-import org.apache.flink.api.common.JobExecutionResult;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
-import org.apache.flink.core.execution.JobClient;
-import org.apache.flink.core.execution.JobListener;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
@@ -28,7 +29,6 @@ import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableDescriptor;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.table.types.DataType;
-import org.apache.flink.runtime.testutils.MiniClusterResourceConfiguration;
 import org.apache.flink.table.types.logical.RowType;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.types.Row;
@@ -37,6 +37,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
+import org.wikimedia.eventutilities.flink.test.utils.FlinkTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -65,18 +66,15 @@ public class TestJsonSchemaFlinkConverter {
             "A URI identifying the JSONSchema for this event. " +
             "This should match an schema's $id in a schema repository. E.g. /schema/title/1.0.0\n"
         ),
+        DataTypes.FIELD("dt", DataTypes.STRING(), "UTC event datetime, in ISO-8601 format"),
         DataTypes.FIELD(
          "meta", DataTypes.ROW(
-                DataTypes.FIELD("uri", DataTypes.STRING(), "Unique URI identifying the event or entity"),
-                DataTypes.FIELD("request_id", DataTypes.STRING(), "Unique ID of the request that caused the event"),
-                DataTypes.FIELD("id", DataTypes.STRING(), "Unique ID of this event"),
-                DataTypes.FIELD("dt", DataTypes.STRING(), "UTC event datetime, in ISO-8601 format"),
-                DataTypes.FIELD("domain", DataTypes.STRING(), "Domain the event or entity pertains to"),
                 DataTypes.FIELD("stream", DataTypes.STRING(), "Name of the stream/queue/dataset that this event belongs in")
             )
         ),
         DataTypes.FIELD("test", DataTypes.STRING()),
         DataTypes.FIELD("test_int", DataTypes.BIGINT()),
+        DataTypes.FIELD("test_decimal", DataTypes.DOUBLE()),
         DataTypes.FIELD("test_map", DataTypes.MAP(
             DataTypes.STRING(),
             DataTypes.STRING()
@@ -104,35 +102,24 @@ public class TestJsonSchemaFlinkConverter {
         // first field names.
         new String[] {
             "$schema",
+            "dt",
             "meta",
             "test",
             "test_int",
+            "test_decimal",
             "test_map",
             "test_array"
         },
         // then field types, corresponding to field name positions.
         // $schema
         Types.STRING,
+        // dt
+        Types.STRING,
         // meta
         Types.ROW_NAMED(
             new String[] {
-                "uri",
-                "request_id",
-                "id",
-                "dt",
-                "domain",
                 "stream"
             },
-            // meta.uri
-            Types.STRING,
-            // meta.request_id
-            Types.STRING,
-            // meta.id
-            Types.STRING,
-            // meta.dt
-            Types.STRING,
-            // meta.domain
-            Types.STRING,
             // meta.stream
             Types.STRING
         ),
@@ -140,6 +127,8 @@ public class TestJsonSchemaFlinkConverter {
         Types.STRING,
         // test_int
         Types.LONG,
+        // test_decimal
+        Types.DOUBLE,
         // test_map
         Types.MAP(
             Types.STRING,
@@ -154,13 +143,31 @@ public class TestJsonSchemaFlinkConverter {
         )
     );
 
+    static final Row expectedExampleRow;
+    static {
+
+        expectedExampleRow = new Row(expectedTypeInformation.getArity());
+        expectedExampleRow.setField(0, "/test/event/1.1.0"); // $schema
+        expectedExampleRow.setField(1, "2019-01-01T00:00:00Z"); // dt
+
+        Row expectedMeta = new Row(1);
+        expectedMeta.setField(0, "test.event.example"); // meta.stream
+        expectedExampleRow.setField(2, expectedMeta); // meta
+
+        expectedExampleRow.setField(3, "specific test value"); // test
+        expectedExampleRow.setField(4, 2L); // test_int
+        expectedExampleRow.setField(5, 2.0D); // test_decimal
+
+        Map<String, String> test_map = new HashMap<>();
+        test_map.put("key1", "val1");
+        test_map.put("key2", "val2");
+        expectedExampleRow.setField(6, test_map); // test_map
+
+        expectedExampleRow.setField(7, null); // test_array
+    }
+
     @ClassRule
-    public static MiniClusterWithClientResource flinkCluster =
-        new MiniClusterWithClientResource(
-            new MiniClusterResourceConfiguration.Builder()
-                .setNumberSlotsPerTaskManager(2)
-                .setNumberTaskManagers(1)
-                .build());
+    public static MiniClusterWithClientResource flinkCluster = FlinkTestUtils.getTestFlinkCluster();
 
     @BeforeAll
     public static void setUp() throws IOException {
@@ -198,6 +205,71 @@ public class TestJsonSchemaFlinkConverter {
         RowTypeInfo typeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(jsonSchema);
         assertThat(typeInfo)
             .isEqualTo(expectedTypeInformation);
+    }
+
+    @Test
+    void testFlinkDeserializationSchemaRow() throws IOException {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // Run in BATCH mode to make sure we can collect results and assert at end.
+        env.setRuntimeMode(RuntimeExecutionMode.BATCH);
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+        // EventStreamFactory with test schema repo and stream config.
+        EventStreamFactory eventStreamFactory = EventStreamFactory.from(
+            schemaBaseUris,
+            testStreamConfigsFile
+        );
+
+        EventStream exampleEventStream = eventStreamFactory.createEventStream("test.event.example");
+        ObjectNode exampleEventJsonSchema = (ObjectNode)exampleEventStream.schema();
+        byte[] exampleEventJsonBytes = exampleEventStream.exampleEvent().toString().getBytes(StandardCharsets.UTF_8);
+
+        DeserializationSchema<Row> jsonRowDeserializer = JsonSchemaFlinkConverter.toDeserializationSchemaRow(
+            exampleEventJsonSchema
+        );
+
+        Row exampleRow = jsonRowDeserializer.deserialize(exampleEventJsonBytes);
+
+        assertThat(exampleRow).isEqualTo(expectedExampleRow);
+    }
+
+    @Test
+    void testFlinkDataStreamIntegration() {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // Run in BATCH mode to make sure we can collect results and assert at end.
+        env.setRuntimeMode(RuntimeExecutionMode.BATCH);
+
+        // EventStreamFactory with test schema repo and stream config.
+        EventStreamFactory eventStreamFactory = EventStreamFactory.from(
+            schemaBaseUris,
+            testStreamConfigsFile
+        );
+
+        EventStream exampleEventStream = eventStreamFactory.createEventStream("test.event.example");
+
+        List<byte[]> inputElements = new ArrayList<>();
+        inputElements.add(exampleEventStream.exampleEvent().toString().getBytes(StandardCharsets.UTF_8));
+
+        JsonRowDeserializationSchema deserializer = JsonSchemaFlinkConverter.toDeserializationSchemaRow(
+            (ObjectNode)exampleEventStream.schema()
+        );
+
+        DataStream<Row> input = env.fromCollection(inputElements).map(deserializer::deserialize);
+
+        EventStream enrichedEventStream = eventStreamFactory.createEventStream("test.event.enriched");
+        DataStream<Row> output = input.map(
+            new Enrich(),
+            JsonSchemaFlinkConverter.toRowTypeInfo((ObjectNode)enrichedEventStream.schema())
+        );
+
+        output.addSink(new EnrichedSink());
+
+        // Add a callback that will assert the correct final sum is collected
+        // after the Flink job finishes.
+        FlinkTestUtils.afterFlinkJob(
+            env,
+            () -> assertThat(EnrichedSink.countOfEnrichedField).isEqualTo(inputElements.size())
+        );
     }
 
     @Test
@@ -275,7 +347,7 @@ public class TestJsonSchemaFlinkConverter {
 
         // Add a callback that will assert the correct final sum is collected
         // after the Flink job finishes.
-        afterFlinkJob(
+        FlinkTestUtils.afterFlinkJob(
             env,
             () -> assertThat(SumSink.sum).isEqualTo(finalExpectedSum)
         );
@@ -297,7 +369,6 @@ public class TestJsonSchemaFlinkConverter {
             );
 
         Table enrichedEventTable = tEnv.fromDataStream(enrichedDataStream);
-
 
         // Test that we can now access the field we added in the DataStream,
         // and use it in the Table API.
@@ -342,41 +413,16 @@ public class TestJsonSchemaFlinkConverter {
         }
 
     }
-
-    /**
-     * Register a callback to be called after successful completion of a FLink job in the
-     * StreamExecutionEnvironment. Throws a RuntimeException if any part of the Flink job fails.
-     * Useful for running test assertions after job results are collected in a Sink.
-     *
-     * @param env StreamExecutionEnvironment
-     * @param callback 0 argument callback to call on successful job completion.
-     */
-    public static void afterFlinkJob(StreamExecutionEnvironment env, Callable<Object> callback) {
-        env.registerJobListener(new JobListener() {
-            @Override
-            public void onJobSubmitted(JobClient jobClient, Throwable throwable)  {
-                // We just raise any throwable, otherwise no-op.
-                if (throwable != null) {
-                    throw new RuntimeException(throwable);
-                }
+    private static class EnrichedSink implements SinkFunction<Row> {
+        public static Long countOfEnrichedField = 0L;
+        @Override
+        public void invoke(Row row, SinkFunction.Context context) throws Exception {
+            String enrichedField = row.getFieldAs("enriched_field");
+            if (enrichedField != null) {
+                countOfEnrichedField++;
             }
-
-            //Callback on job execution finished, successfully or unsuccessfully.
-            @SuppressWarnings("checkstyle:IllegalCatch")
-            @Override
-            public void onJobExecuted(JobExecutionResult jobExecutionResult, Throwable throwable)  {
-                // Raise any throwable, else call the callback
-                if (throwable != null) {
-                    throw new RuntimeException(throwable);
-                } else {
-                    try {
-                        callback.call();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        });
+        }
     }
+
 
 }

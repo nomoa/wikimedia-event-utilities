@@ -54,7 +54,7 @@ public final class BasicHttpClient implements Closeable {
      * This will throw a UncheckedIOException instead.
      *
      * This function is suitable for use as a {@link ResourceLoader} loader function.
-     * Call <code>resourceLoader.withHttpClient(basicHttpClient)</code> to have an instance
+     * Call {@code resourceLoader.withHttpClient(basicHttpClient)} to have an instance
      * of ResourceLoader use a BasicHttpClient to load http and https URLs using this function.
      */
     public byte[] getAsBytes(URI uri) {

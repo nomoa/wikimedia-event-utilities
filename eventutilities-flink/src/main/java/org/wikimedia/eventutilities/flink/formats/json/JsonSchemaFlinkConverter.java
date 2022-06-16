@@ -21,11 +21,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * Example:
  * Create a streaming Table from JSON data in a Kafka topic using a JSONSchema.
- * <code>
+ * <pre>{@code
  * ObjectNode jsonSchema = # ... Get this somehow, perhaps from EventStream schema() method.
  *
  * # This schemaBuilder will already have the DataType set via the JSONSchema.
- * Schema.Builder schemaBuilder = JsonSchemaFlinkConverter.getSchemaBuilder(jsonSchema);
+ * Schema.Builder schemaBuilder = JsonSchemaFlinkConverter.toSchemaBuilder(jsonSchema);
  *
  * # Add the kafka_timestamp as the metadata column and use it as the watermark.
  * schemaBuilder.columnByMetadata(
@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * stEnv.createTemporaryTable(
  *     "my_table",
  *     TableDescriptor.forConnector("kafka")
- *         .schema(schemaBuilder.build())
+ *         .schema(schemaBuilderlder.build())
  *         .option("properties.bootstrap.servers", "localhost:9092")
  *         .option("topic", "my_stream_topic")
  *         .option("properties.group.id", "my_consumer_group0")
@@ -48,13 +48,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *         .format("json")
  *         .build()
  * )
- * </code>
+ * }</pre>
  *
  * Or, get the RowTypeInfo (AKA TypeInformation of Row) corresponding to an event JSONSchema.
- * <code>
+ * <pre>{@code
  * ObjectNode jsonSchema = # ... Get this somehow, perhaps from EventStream schema() method.
  * RowTypeInfo eventSchemaTypeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(jsonSchema);
- * </code>
+ * }</pre>
  */
 public final class JsonSchemaFlinkConverter {
 
@@ -141,7 +141,7 @@ public final class JsonSchemaFlinkConverter {
     /**
      * Converts this JSONSchema to a Flink DataStream API {@link RowTypeInfo},
      * which is an instance of
-     * {@link TypeInformation<org.apache.flink.types.Row>}.
+     * {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
      * RowTypeInfo has some extra logic for working with TypeInformation
      * when it represents a {@link org.apache.flink.types.Row}.
      * You can RowTypeInfo as if it were a TypeInformation of Row.
@@ -149,19 +149,38 @@ public final class JsonSchemaFlinkConverter {
      * @param jsonSchema
      *  The JSONSchema ObjectNode.  his should have "type": "object"
      *  to property convert to
-     *  {@link TypeInformation<org.apache.flink.types.Row>}.
+     *  {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
      *
      * @throws IllegalArgumentException
      *  if the JSONSchema is not on "object" type.
 
      * @return
-     *  jsonSchema converted to {@link TypeInformation<org.apache.flink.types.Row>}.
+     *  jsonSchema converted to {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
      */
     public static RowTypeInfo toRowTypeInfo(
         @Nonnull ObjectNode jsonSchema
     ) {
         JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
         return (RowTypeInfo)toTypeInformation(jsonSchema);
+    }
+
+    /**
+     * Gets a JSON deserializer to Row in hybrid named position mode for the jsonSchema.
+     * Missing fields are allowed (and set to null), and parse errors
+     * are always thrown.
+     *
+     * @param jsonSchema
+     *  The JSONSchema ObjectNode.  his should have "type": "object"
+     *  to property convert to
+     *  {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
+     *
+     * @return
+     *  DeserializationSchema of Row that can deserialize JSON data for the jsonSchema to a FLink Row.
+     */
+    public static JsonRowDeserializationSchema toDeserializationSchemaRow(
+        @Nonnull ObjectNode jsonSchema
+    ) {
+        return new JsonRowDeserializationSchema.Builder(toRowTypeInfo(jsonSchema)).build();
     }
 
     /**

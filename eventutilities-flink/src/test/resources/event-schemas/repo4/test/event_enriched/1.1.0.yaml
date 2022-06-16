@@ -1,6 +1,6 @@
-title: test/event_enriched
+title: test/event
 description: Schema used for simple tests
-$id: /test/event_enriched/1.1.0
+$id: /test/event/1.1.0
 $schema: 'https://json-schema.org/draft-07/schema#'
 type: object
 required:
@@ -12,32 +12,16 @@ properties:
       A URI identifying the JSONSchema for this event. This should match an
       schema's $id in a schema repository. E.g. /schema/title/1.0.0
     type: string
+  dt:
+    description: 'UTC event datetime, in ISO-8601 format'
+    type: string
+    format: date-time
+    maxLength: 128
   meta:
     type: object
     required:
-      - dt
       - stream
     properties:
-      uri:
-        description: Unique URI identifying the event or entity
-        type: string
-        format: uri-reference
-        maxLength: 8192
-      request_id:
-        description: Unique ID of the request that caused the event
-        type: string
-      id:
-        description: Unique ID of this event
-        type: string
-      dt:
-        description: 'UTC event datetime, in ISO-8601 format'
-        type: string
-        format: date-time
-        maxLength: 128
-      domain:
-        description: Domain the event or entity pertains to
-        type: string
-        minLength: 1
       stream:
         description: Name of the stream/queue/dataset that this event belongs in
         type: string
@@ -48,6 +32,8 @@ properties:
   test_int:
     type: integer
     default: 2
+  test_decimal:
+    type: number
   test_map:
     description: >
       We want to support 'map' types using additionalProperties to specify the
@@ -79,11 +65,12 @@ properties:
     description: A new field for enrichment
 examples:
   - $schema: /test/event/1.1.0
+    dt: 2019-01-01T00:00:00Z
     meta:
-      dt: '2019-01-01T00:00:00Z'
       stream: test.event.example
     test: specific test value
     test_int: 2
+    test_decimal: 2.0
     test_map:
       key1: val1
       key2: val2
