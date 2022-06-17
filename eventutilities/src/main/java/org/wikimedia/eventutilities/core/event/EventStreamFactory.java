@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
  * methods to construct an EventStreamFactory.
  *
  * Example using builder():
- * <code>
+ * <pre>{@code
  *  EventStreamFactory f = EventStreamFactory.builder()
  *      .setEventSchemaLoader(Arrays.asList("file:///path/to/schema/repo"))
  *      // MW Stream Config URL, will use MediawikiEventStreamConfigLoader
@@ -42,10 +42,10 @@ import com.google.common.base.Preconditions;
  *          "file:///path/to/event_service_map.yaml"
  *       )
  *      .build()
- * </code>
+ * }</pre>
  *
  * Example using from():
- * <code>
+ * <pre>{@code
  *     EventStreamFactory f = EventStreamFactory.from(
  *          Arrays.asList(
  *              "https://schema.wikimedia.org/repositories/primary",
@@ -53,7 +53,7 @@ import com.google.common.base.Preconditions;
  *          ),
  *          "https://meta.wikimedia.org/w/api.php/",
  *     );
- * </code>
+ * }</pre>
  */
 public class EventStreamFactory {
     /**

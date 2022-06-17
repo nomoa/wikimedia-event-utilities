@@ -29,12 +29,12 @@ import com.google.common.io.Resources;
  *
  * Usage:
  *
- * <code>
+ * <pre>{@code
  *     ResourceLoader resourceLoader = ResourceLoader.builder()
  *          .setBaseUrls(Arrays.asList(
  *              new URL
  *
- * </code>
+ * }</pre>
  */
 public class ResourceLoader {
     /**

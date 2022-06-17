@@ -12,10 +12,10 @@ import com.github.fge.jsonschema.core.load.SchemaLoader;
  * Uses a {@link JsonLoader} to fetch JSON schemas from URIs and cache them.
  * Usage:
  *
- * <code>
+ * <pre>{@code
  * JsonSchemaLoader schemaLoader = JsonSchemaLoader(schemaBaseURLs);
  * JsonNode schema = schemaLoader.load("http://my.schemas.org/schemas/test/event/schema/0.0.2")
- * </code>
+ * }</pre>
  */
 public class JsonSchemaLoader {
 

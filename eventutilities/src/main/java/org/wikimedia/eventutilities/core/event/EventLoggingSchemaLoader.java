@@ -20,7 +20,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * this will always use the latest schema.
  *
  * Usage:
- * <pre>
+ * <pre>{@code
  * EventLoggingSchemaLoader schemaLoader = new EventLoggingSchemaLoader();
  *
  * // Load Test schema revision 123
@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  *
  * // Load the schema for JsonNode or Json String event (schema name is at /schema in event).
  * schemaLoader.getEventSchema(event);
- * </pre>
+ * }</pre>
  */
 public class EventLoggingSchemaLoader extends EventSchemaLoader {
     /**

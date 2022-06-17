@@ -19,7 +19,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 /**
  * Uses a {@link ResourceLoader} to load content at URIs and parse it into YAML or JSON.
  *
- * If the data fetched fromo a URI starts with a { or [
+ * If the data fetched from a URI starts with a { or [
  * character, it will be assumed to be JSON and JsonParser will be used.
  * Otherwise YAMLParser will be used. JSON data can contain certain unicode
  * characters that YAML cannot, so it is best to use JsonParser when we can.
@@ -87,8 +87,8 @@ public class JsonLoader {
 
     /**
      * Convenience method to reuse our ObjectMapper to convert a JsonNode to a Java Class.
-     * See:
-     * https://fasterxml.github.io/jackson-databind/javadoc/2.10/com/fasterxml/jackson/databind/ObjectMapper.html#convertValue-java.lang.Object-java.lang.Class
+     * See: {@link ObjectMapper#convertValue(Object, Class)}
+
      */
     public <T> T convertValue(JsonNode jsonNode, Class<T> t) {
         return objectMapper.convertValue(jsonNode, t);

@@ -97,11 +97,12 @@ public class EventStreamConfig {
     /**
      * Builder, builder pattern to construct
      * EventStreamConfig instances.  Usage:
-     *
+     * <pre>{@code
      *  EventStreamConfig c = EventStreamConfig.builder()
      *      .setEventStreamConfigLoader("https://meta.wikimedia.org/w/api.php")
      *      .setEventServiceToUriMap("file:///path/to/event_service_map.yaml")
      *      .build()
+     * }</pre>
      */
     public static class Builder {
         private EventStreamConfigLoader eventStreamConfigLoader;
@@ -334,11 +335,11 @@ public class EventStreamConfig {
      * This will still return an ObjectNode mapping the
      * stream name to the stream config entry. E.g.
      *
-     * <pre>
+     * <pre>{@code
      *   getStreamConfigs(my_stream)
      *      returns
      *   { my_stream: { schema_title: my/schema, ... } }
-     * </pre>
+     * }</pre>
      */
     public ObjectNode getStreamConfig(String streamName) {
         return getStreamConfigs(ImmutableList.of(streamName));
@@ -366,11 +367,11 @@ public class EventStreamConfig {
     /**
      * Gets a stream config setting for a specific stream.  E.g.
      *
-     * <pre>
+     * <pre>{@code
      * JsonNode setting = getSetting("mediawiki.revision-create", "destination_event_service")
      *  returns
      * TextNode("eventgate-main")
-     * </pre>
+     * }</pre>
      * You'll still have to pull the value out of the JsonNode wrapper yourself.
      * E.g. setting.asText() or setting.asDouble()
      *
@@ -405,11 +406,8 @@ public class EventStreamConfig {
      * If either this streamName does not have a stream config entry, or
      * the stream config entry does not have setting, this returns null.
      *
-     * <pre>
-     * JsonNode setting = getSettingAsString("mediawiki.revision-create", "destination_event_service")
-     *  returns
-     * "eventgate-main"
-     * </pre>
+     * {@code JsonNode setting = getSettingAsString("mediawiki.revision-create", "destination_event_service")}
+     * returns "eventgate-main"
      *
      * If either this streamName does not have a stream config entry, or
      * the stream config entry does not have setting, this returns null.
@@ -599,12 +597,17 @@ public class EventStreamConfig {
      * removed from the beginning and end of the string before joining into a regex.
      *
      * Example:
+     * <pre>
      *   ("a", "/^b.+/", "c") returns "(a|^b.+|c)"
+     * </pre>
      *
      * Use this for converting a list of topics to a regex like:
+     *
+     * <pre>{@code
      *  EventStreamConfig.toRegex(
      *      eventStreamConfig.getAllCachedTopics()
      *  );
+     * }</pre>
      */
     public static String toRegex(Collection<String> strings) {
         List<String> stringsForRegex = strings.stream()

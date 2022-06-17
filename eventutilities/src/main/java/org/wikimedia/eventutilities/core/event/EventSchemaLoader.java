@@ -23,7 +23,7 @@ import com.google.common.base.Preconditions;
  * Class to load and cache JSONSchema JsonNodes from relative schema URIs and event data.
  *
  * Usage:
- * <code>
+ * <pre>{@code
  * EventSchemaLoader schemaLoader = EventSchemaLoader.builder()
  *  .setJsonSchemaLoader(ResourceLoader.asURLs(Arrays.asList(
  *      "file:///path/to/schemas1",
@@ -36,7 +36,7 @@ import com.google.common.base.Preconditions;
  *
  * // Load the JsonNode or JSON String event's JSONSchema at /$schema
  * schemaLoader.getEventSchema(event);
- * </code>
+ * }</pre>
  */
 public class EventSchemaLoader {
 
