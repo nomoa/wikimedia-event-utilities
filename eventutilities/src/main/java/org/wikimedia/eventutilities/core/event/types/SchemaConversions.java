@@ -6,6 +6,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import lombok.Data;
+
 /**
  * Interface for supported WMF Event Schema type conversions.
  * This is used to map to a particular schema container, e.g. Flink DataTypes or Spark DataTypes.
@@ -93,63 +95,31 @@ public interface SchemaConversions<T> {
     T typeRow(List<RowField<T>> rowFields);
 
 
+    // NOTE: In case you are not familiar with lombok @Data annotation:
+    // @Data will add the expected constructor and getters for the declared fields
+    // that you'd expect to see in a POJO.  Since all RowField fields are final here,
+    // there will be no setters generated for them.
+    // See: https://projectlombok.org/features/Data
+
     /**
      * Data Transfer Object wrapper for a 'row field' type.
      * Only used for representing a field in a row that is passed
      * to a {@link SchemaConversions#typeRow} implementation.
      */
+    @Data
     class RowField<T> {
 
-        private final @Nonnull
-        String name;
+        /** Field name. */
+        private final @Nonnull String name;
+
+        /** Field type, should be compatible with the containing row type. */
         private final @Nonnull T type;
+
+        /** If the field should be nullable. */
         private final boolean isNullable;
-        private final @Nullable
-        String description;
 
-        /**
-         * @param name
-         *  Field name.
-         *
-         * @param type
-         *  Field type, should be compatible with the containing row type.
-         *
-         * @param isNullable
-         *  If the field should be nullable.
-         *
-         * @param description
-         *  Optional field description or comment.
-         */
-        public RowField(
-            @Nonnull String name,
-            @Nonnull T type,
-            boolean isNullable,
-            @Nullable String description
-        ) {
-            this.name = name;
-            this.type = type;
-            this.isNullable = isNullable;
-            this.description = description;
-        }
-
-        @Nonnull
-        public String getName() {
-            return name;
-        }
-
-        @Nonnull
-        public T getType() {
-            return type;
-        }
-
-        public boolean getIsNullable() {
-            return isNullable;
-        }
-
-        @Nullable
-        public String getDescription() {
-            return description;
-        }
+        /** Optional field description or comment. */
+        private final @Nullable String description;
 
     }
 }
