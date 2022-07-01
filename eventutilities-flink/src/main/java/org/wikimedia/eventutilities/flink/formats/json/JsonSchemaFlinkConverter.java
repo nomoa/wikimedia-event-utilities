@@ -1,6 +1,7 @@
 package org.wikimedia.eventutilities.flink.formats.json;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
@@ -56,6 +57,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * RowTypeInfo eventSchemaTypeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(jsonSchema);
  * </code>
  */
+@ParametersAreNonnullByDefault
 public final class JsonSchemaFlinkConverter {
 
     /**
@@ -86,9 +88,8 @@ public final class JsonSchemaFlinkConverter {
      *  {@link org.apache.flink.table.api.Schema.Builder}
      *  with DataType with logical RowType as schema.
      */
-    public static Schema.Builder toSchemaBuilder(
-        @Nonnull ObjectNode jsonSchema
-    ) {
+    @Nonnull
+    public static Schema.Builder toSchemaBuilder(ObjectNode jsonSchema) {
         JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
 
         DataType dataType = toDataType(jsonSchema);
@@ -117,9 +118,8 @@ public final class JsonSchemaFlinkConverter {
      *  jsonSchema converted to
      *  {@link DataType}
      */
-    public static DataType toDataType(
-        @Nonnull ObjectNode jsonSchema
-    ) {
+    @Nonnull
+    public static DataType toDataType(ObjectNode jsonSchema) {
         return dataTypeConverter.convert(jsonSchema);
     }
 
@@ -132,9 +132,8 @@ public final class JsonSchemaFlinkConverter {
      * @return
      *  jsonSchema converted to {@link TypeInformation}
      */
-    public static TypeInformation<?> toTypeInformation(
-        @Nonnull ObjectNode jsonSchema
-    ) {
+    @Nonnull
+    public static TypeInformation<?> toTypeInformation(ObjectNode jsonSchema) {
         return typeInformationConverter.convert(jsonSchema);
     }
 
@@ -157,8 +156,8 @@ public final class JsonSchemaFlinkConverter {
      * @return
      *  jsonSchema converted to {@link TypeInformation<org.apache.flink.types.Row>}.
      */
-    public static RowTypeInfo toRowTypeInfo(
-        @Nonnull ObjectNode jsonSchema
+    @Nonnull
+    public static RowTypeInfo toRowTypeInfo(ObjectNode jsonSchema
     ) {
         JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
         return (RowTypeInfo)toTypeInformation(jsonSchema);

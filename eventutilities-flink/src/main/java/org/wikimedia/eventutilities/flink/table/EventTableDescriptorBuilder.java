@@ -1,10 +1,13 @@
 package org.wikimedia.eventutilities.flink.table;
 
+import static java.util.Collections.emptyMap;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.TableDescriptor;
@@ -78,6 +81,7 @@ import com.google.common.base.Preconditions;
  * </code>
  *
  */
+@ParametersAreNonnullByDefault
 public class EventTableDescriptorBuilder {
     private final EventStreamFactory eventStreamFactory;
 
@@ -103,12 +107,13 @@ public class EventTableDescriptorBuilder {
      * @param eventStreamConfigUri
      *  URI from which to fetch event stream config.
      */
+    @Nonnull
     public static EventTableDescriptorBuilder from(
-        @Nonnull List<String> eventSchemaBaseUris,
-        @Nonnull String eventStreamConfigUri
+        List<String> eventSchemaBaseUris,
+        String eventStreamConfigUri
     ) {
         return EventTableDescriptorBuilder.from(
-            eventSchemaBaseUris, eventStreamConfigUri, null
+            eventSchemaBaseUris, eventStreamConfigUri, emptyMap()
         );
     }
 
@@ -126,9 +131,10 @@ public class EventTableDescriptorBuilder {
      *  E.g. "https://meta.wikimedia.org" to "https://api-ro.wikimedia.org"
      *  If null, no special routing will be configured.
      */
+    @Nonnull
     public static EventTableDescriptorBuilder from(
-        @Nonnull List<String> eventSchemaBaseUris,
-        @Nonnull String eventStreamConfigUri,
+        List<String> eventSchemaBaseUris,
+        String eventStreamConfigUri,
         Map<String, String> httpClientRoutes
     ) {
         return new EventTableDescriptorBuilder(
@@ -142,6 +148,7 @@ public class EventTableDescriptorBuilder {
      * Convenience method to get the EventStreamFactory used
      * by this EventTableDescriptorBuilder.
      */
+    @Nonnull
     public EventStreamFactory getEventStreamFactory() {
         return eventStreamFactory;
     }
@@ -153,6 +160,7 @@ public class EventTableDescriptorBuilder {
      *  A valid and registered Flink Table Connector Factory Identifier string.
      *  e.g. "kafka" or "filesystem".
      */
+    @Nonnull
     public EventTableDescriptorBuilder connector(String connectorIdentifier) {
         this.connectorIdentifier = connectorIdentifier;
         return this;
@@ -161,6 +169,7 @@ public class EventTableDescriptorBuilder {
     /**
      * Sets the EventStream that will be used to build the TableDescriptor.
      */
+    @Nonnull
     public EventTableDescriptorBuilder eventStream(EventStream eventStream) {
         this.eventStream = eventStream;
         return this;
@@ -172,6 +181,7 @@ public class EventTableDescriptorBuilder {
      * @param streamName
      *  Name of the EventStream, must be declared in EventStreamConfig.
      */
+    @Nonnull
     public EventTableDescriptorBuilder eventStream(String streamName) {
         return eventStream(eventStreamFactory.createEventStream(streamName));
     }
@@ -180,6 +190,7 @@ public class EventTableDescriptorBuilder {
      * Sets the Schema.Builder. If you don't set this the Table Schema will be
      * converted from the eventStream's JSONSchema.
      */
+    @Nonnull
     public EventTableDescriptorBuilder schemaBuilder(Schema.Builder schemaBuilder) {
         this._schemaBuilder = schemaBuilder;
         return this;
@@ -189,7 +200,8 @@ public class EventTableDescriptorBuilder {
      * Sets the TableDescriptor.Builder options.
      * This clears out any previously set options.
      */
-    public EventTableDescriptorBuilder options(@Nonnull Map<String, String> options) {
+    @Nonnull
+    public EventTableDescriptorBuilder options(Map<String, String> options) {
         this.options = options;
         return this;
     }
@@ -197,6 +209,7 @@ public class EventTableDescriptorBuilder {
     /**
      * Sets a single TableDescriptor.Builder option.
      */
+    @Nonnull
     public EventTableDescriptorBuilder option(String key, String value) {
         this.options.put(key, value);
         return this;
@@ -206,6 +219,7 @@ public class EventTableDescriptorBuilder {
      * Sets the format for the TableDescriptor.Builder.
      * This needed by most, but not all, connectors.
      */
+    @Nonnull
     public EventTableDescriptorBuilder format(String format) {
         this.formatIdentifier = format;
         return this;
@@ -214,6 +228,7 @@ public class EventTableDescriptorBuilder {
     /**
      * Sets the partitionKeys for the TableDescriptor.Builder.
      */
+    @Nonnull
     public EventTableDescriptorBuilder partitionedBy(String... partitionKeys) {
         this.partitionKeys = partitionKeys;
         return this;
@@ -245,6 +260,7 @@ public class EventTableDescriptorBuilder {
      *  Kafka consumer.group.id property.
      *
      */
+    @Nonnull
     public EventTableDescriptorBuilder setupKafka(
         String bootstrapServers,
         String consumerGroup
@@ -270,6 +286,7 @@ public class EventTableDescriptorBuilder {
      * Adds a "kafka_timestamp" column to the schema and uses
      * it as the watermark field with a default watermark delay of 10 seconds.
      */
+    @Nonnull
     public EventTableDescriptorBuilder withKafkaTimestampAsWatermark() {
         return withKafkaTimestampAsWatermark(
             "kafka_timestamp",
@@ -288,8 +305,9 @@ public class EventTableDescriptorBuilder {
      *  Seconds to delay the watermark by.
      *
      */
+    @Nonnull
     public EventTableDescriptorBuilder withKafkaTimestampAsWatermark(
-        @Nonnull String columnName,
+        String columnName,
         int watermarkDelaySeconds
     ) {
         String watermarkExpression;
@@ -320,9 +338,10 @@ public class EventTableDescriptorBuilder {
      *  This should probably refer to the columnName, e.g. "$columnName - INTERVAL '30' seconds"
      *
      */
+    @Nonnull
     public EventTableDescriptorBuilder withKafkaTimestampAsWatermark(
-        @Nonnull String columnName,
-        @Nonnull String sqlExpression
+        String columnName,
+        String sqlExpression
     ) {
         Schema.Builder sb = getSchemaBuilder();
         sb.columnByMetadata(
@@ -346,6 +365,7 @@ public class EventTableDescriptorBuilder {
      * @return
      *  The Schema.Builder that will be used to build the Table Schema.
      */
+    @Nonnull
     public Schema.Builder getSchemaBuilder() {
         Preconditions.checkState(
             !(this.eventStream == null && this._schemaBuilder == null),
@@ -370,6 +390,7 @@ public class EventTableDescriptorBuilder {
      * Any collected state will be cleared before returning, so you
      * can re-use this EventTableDescriptorBuilder again.
      */
+    @Nonnull
     public TableDescriptor build() {
         Preconditions.checkState(
             connectorIdentifier != null,
@@ -404,6 +425,7 @@ public class EventTableDescriptorBuilder {
      * Clears all collected configs and options from this EventTableDescriptorBuilder
      * so that it can be used to build another TableDescriptor.
      */
+    @Nonnull
     public final EventTableDescriptorBuilder clear() {
         this.options = new HashMap<>();
         this.eventStream = null;

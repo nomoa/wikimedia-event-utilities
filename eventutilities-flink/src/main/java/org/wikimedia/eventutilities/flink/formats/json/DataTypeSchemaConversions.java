@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.types.DataType;
@@ -19,6 +20,7 @@ import org.wikimedia.eventutilities.core.event.types.SchemaConversions;
  * To handle proper conversion between Table API and DataStream,
  * Flink needs the types consistently converted to the same underlying representations.
  */
+@ParametersAreNonnullByDefault
 public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
 
     /**
@@ -77,7 +79,7 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
      */
     @Override
     public DataType typeArray(
-        @Nonnull DataType elementType,
+        DataType elementType,
         boolean elementsAreNullable
     ) {
         return DataTypes.ARRAY(elementType);
@@ -91,8 +93,8 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
      */
     @Override
     public DataType typeMap(
-        @Nonnull DataType keyType,
-        @Nonnull DataType valueType,
+        DataType keyType,
+        DataType valueType,
         boolean valuesAreNullable
     ) {
         return DataTypes.MAP(keyType, valueType);
@@ -108,7 +110,7 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
      *  {@link DataTypes#ROW}
      */
     @Override
-    public DataType typeRow(@Nonnull List<RowField<DataType>> rowFields) {
+    public DataType typeRow(List<RowField<DataType>> rowFields) {
         List<DataTypes.Field> dataTypeFields = new ArrayList<>();
 
         for (RowField<DataType> rowField : rowFields) {
@@ -128,9 +130,10 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
      * Helper for constructing a DataTypes.Field with name,
      * DataType, and optional description.
      */
+    @Nonnull
     protected DataTypes.Field buildFieldDataType(
-        @Nonnull String name,
-        @Nonnull DataType dataType,
+        String name,
+        DataType dataType,
         @Nullable String description
     ) {
         if (description != null) {

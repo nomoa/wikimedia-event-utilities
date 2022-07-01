@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Interface for supported WMF Event Schema type conversions.
@@ -20,31 +21,37 @@ import javax.annotation.Nullable;
  * https://phabricator.wikimedia.org/T310495
  * https://phabricator.wikimedia.org/T278467
  */
+@ParametersAreNonnullByDefault
 public interface SchemaConversions<T> {
 
     /**
      * Returns type that represents null.
      */
+    @Nonnull
     T typeNull();
 
     /**
      * Returns type that represents boolean.
      */
+    @Nonnull
     T typeBoolean();
 
     /**
      * Returns type that represents String.
      */
+    @Nonnull
     T typeString();
 
     /**
      * Returns type that represents integer.
      */
+    @Nonnull
     T typeInteger();
 
     /**
      * Returns type that represents decimal.
      */
+    @Nonnull
     T typeDecimal();
 
     /**
@@ -59,6 +66,7 @@ public interface SchemaConversions<T> {
      * @param valuesAreNullable
      *  Whether Map values are possibly null.
      */
+    @Nonnull
     T typeMap(T keyType, T valueType, boolean valuesAreNullable);
 
     /**
@@ -70,6 +78,7 @@ public interface SchemaConversions<T> {
      * @param elementsAreNullable
      *  Whether Array elements are possibly null.
      */
+    @Nonnull
     T typeArray(T elementType, boolean elementsAreNullable);
 
     /**
@@ -80,6 +89,7 @@ public interface SchemaConversions<T> {
      * @param rowFields
      *  List of {@link RowField}s in this row.  Use these to construct your row type.
      */
+    @Nonnull
     T typeRow(List<RowField<T>> rowFields);
 
 

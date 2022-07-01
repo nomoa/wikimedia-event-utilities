@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * @param <T>
  *  {@link SchemaConversions} implementation
  */
+@ParametersAreNonnullByDefault
 public class JsonSchemaConverter<T> {
 
     // JSONSchema keywords
@@ -62,7 +64,7 @@ public class JsonSchemaConverter<T> {
     private final @Nonnull
     SchemaConversions<T> schemaConversions;
 
-    public JsonSchemaConverter(@Nonnull SchemaConversions<T> schemaConversions) {
+    public JsonSchemaConverter(SchemaConversions<T> schemaConversions) {
         this.schemaConversions = schemaConversions;
     }
 
@@ -88,7 +90,8 @@ public class JsonSchemaConverter<T> {
      *
      * @return jsonSchema converted to T using the provided SchemaConversions.
      */
-    public T convert(@Nonnull ObjectNode jsonSchema) {
+    @Nonnull
+    public T convert(ObjectNode jsonSchema) {
         checkArgument(!jsonSchema.isNull(), "JSONSchema cannot be a \"null\" node.");
         return convert(jsonSchema, "<root>");
     }
@@ -104,9 +107,10 @@ public class JsonSchemaConverter<T> {
      *      Fully qualified dotted json path to the current node in the JSONSchema.
      *      Used only for informational error and log messages.
      */
+    @Nonnull
     protected T convert(
-        @Nonnull ObjectNode jsonSchema,
-        @Nonnull String nodePath
+        ObjectNode jsonSchema,
+        String nodePath
     ) {
         // Get the value of the JSONSchema "type".
         String jsonSchemaType = getJsonSchemaType(jsonSchema);
@@ -177,6 +181,7 @@ public class JsonSchemaConverter<T> {
         return convertedType;
     }
 
+    @Nonnull
     protected T convertArrayType(ObjectNode jsonSchema, String nodePath) {
         JsonNode itemsSchema = getJsonNode(
             jsonSchema,
@@ -196,6 +201,7 @@ public class JsonSchemaConverter<T> {
         return schemaConversions.typeArray(elementType, true);
     }
 
+    @Nonnull
     protected T convertMapType(ObjectNode jsonSchema, String nodePath) {
         String errorMessage = nodePath + "." + ADDITIONAL_PROPERTIES +
             "\" must be a JSONSchema object to be a Map type";
@@ -223,6 +229,7 @@ public class JsonSchemaConverter<T> {
         return schemaConversions.typeMap(schemaConversions.typeString(), valueType, true);
     }
 
+    @Nonnull
     protected T convertRowType(ObjectNode jsonSchema, String nodePath) {
         String errorMessage = nodePath + " object JSONSchema \"" + PROPERTIES + "\" is not an object.";
         JsonNode properties = getJsonNode(jsonSchema, PROPERTIES, errorMessage);
@@ -283,6 +290,7 @@ public class JsonSchemaConverter<T> {
      * @param errorMessage Error message for IllegalArgumentException if key is not set or is "null".
      * @return JsonNode in objectNode at key
      */
+    @Nonnull
     public static JsonNode getJsonNode(ObjectNode objectNode, String key, String errorMessage) {
         JsonNode jsonNode = objectNode.get(key);
         checkArgument(jsonNode != null && !jsonNode.isNull(), errorMessage);
@@ -292,6 +300,7 @@ public class JsonSchemaConverter<T> {
     /**
      * DRY helper function to extract the JSONSchema "type".
      */
+    @Nonnull
     public static String getJsonSchemaType(ObjectNode jsonSchema) {
         String getTypeErrorMessage = "jsonSchema does not contain valid JSONSchema \"" + TYPE + "\".";
         JsonNode schemaTypeNode = getJsonNode(jsonSchema, TYPE, getTypeErrorMessage);
@@ -304,6 +313,7 @@ public class JsonSchemaConverter<T> {
      * DRY helper function that asserts that the jsonSchema has "type": "object".
      * @throws IllegalArgumentException if jsonSchema "type" != "object"
      */
+    @Nonnull
     public static void checkJsonSchemaIsObject(ObjectNode jsonSchema) {
         String schemaTitle;
         if (jsonSchema.hasNonNull(TITLE)) {

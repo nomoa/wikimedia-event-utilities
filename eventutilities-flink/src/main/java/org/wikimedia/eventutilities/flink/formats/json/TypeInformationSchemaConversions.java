@@ -3,6 +3,7 @@ package org.wikimedia.eventutilities.flink.formats.json;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
@@ -19,6 +20,7 @@ import org.wikimedia.eventutilities.core.event.types.SchemaConversions;
  * To handle proper conversion between Table API and DataStream,
  * Flink needs the types consistently converted to the same underlying representations.
  */
+@ParametersAreNonnullByDefault
 public class TypeInformationSchemaConversions implements SchemaConversions<TypeInformation<?>> {
 
     /**
@@ -75,7 +77,7 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
      */
     @Override
     public TypeInformation<?> typeArray(
-        @Nonnull TypeInformation<?> elementType,
+        TypeInformation<?> elementType,
         boolean elementsAreNullable
     ) {
         return Types.OBJECT_ARRAY(elementType);
@@ -91,8 +93,8 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
      */
     @Override
     public TypeInformation<?> typeMap(
-        @Nonnull TypeInformation<?> keyType,
-        @Nonnull TypeInformation<?> valueType,
+        TypeInformation<?> keyType,
+        TypeInformation<?> valueType,
         boolean valuesAreNullable
     ) {
         return Types.MAP(typeString(), valueType);
