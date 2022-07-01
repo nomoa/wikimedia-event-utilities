@@ -1,6 +1,7 @@
 package org.wikimedia.eventutilities.flink.stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,18 +26,24 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.connectors.kafka.partitioner.FlinkKafkaPartitioner;
 import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.types.Row;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.event.EventStream;
+import org.wikimedia.eventutilities.flink.formats.json.KafkaRecordTimestampStrategy;
 import org.wikimedia.eventutilities.flink.formats.json.JsonRowDeserializationSchema;
+import org.wikimedia.eventutilities.flink.formats.json.JsonRowSerializationSchema;
 import org.wikimedia.eventutilities.flink.formats.json.JsonSchemaFlinkConverter;
 import org.wikimedia.eventutilities.flink.test.utils.FlinkTestUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
+@SuppressWarnings("checkstyle:classfanoutcomplexity")
 public class TestEventDataStreamFactory {
 
     private static final String testStreamConfigsFile =
@@ -63,9 +70,10 @@ public class TestEventDataStreamFactory {
         expectedExampleRow.setField(0, "/test/event/1.1.0"); // $schema
         expectedExampleRow.setField(1, Instant.parse("2019-01-01T00:00:00Z")); // dt
 
-        Row expectedMeta = new Row(2);
+        Row expectedMeta = new Row(3);
         expectedMeta.setField(0, "test.event.example"); // meta.stream
         expectedMeta.setField(1, Instant.parse("2019-01-01T00:00:30Z")); // meta.dt
+        expectedMeta.setField(2, "bbb07628-ffa9-40cf-8cbc-36d15e2049ba");
         expectedExampleRow.setField(2, expectedMeta); // meta
 
         expectedExampleRow.setField(3, "specific test value"); // test
@@ -96,6 +104,28 @@ public class TestEventDataStreamFactory {
     }
 
     @Test
+    void testGetSerializer() throws IOException {
+        JsonRowSerializationSchema serializationSchema = factory.serializer(streamName, "1.1.0");
+        JsonRowDeserializationSchema deserializer = factory.deserializer(streamName, "1.1.0");
+        RowTypeInfo schemaRowTypeInfo = factory.rowTypeInfo(streamName, "1.1.0");
+        assertThat(serializationSchema.getTypeInformation()).isEqualTo(schemaRowTypeInfo);
+
+        EventStream exampleEventStream = factory.getEventStreamFactory().createEventStream(streamName);
+
+        byte[] jsonEvent = exampleEventStream.exampleEvent().toString().getBytes(StandardCharsets.UTF_8);
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode expectedEventAsJson = mapper.readTree(jsonEvent);
+        Row exampleRow = deserializer.deserialize(jsonEvent);
+        byte[] serializedEvent = serializationSchema.serialize(exampleRow);
+        JsonNode actualEventAsJson = mapper.readTree(serializedEvent);
+        assertThat(actualEventAsJson.get("meta").get("dt")).isNotNull();
+        assertThat(actualEventAsJson.get("meta").get("id")).isNotNull();
+        // remove fields set by the generator: meta.id and meta.dt
+        assertThat(actualEventAsJson).isEqualTo(expectedEventAsJson);
+    }
+
+    @Test
     void testKafkaSourceBuilderProducedType() {
         // NOTE: The KafkaSource is not ever actually used by these tests.
         // This test just verifies that the deserialization schema that the
@@ -115,11 +145,55 @@ public class TestEventDataStreamFactory {
     }
 
     @Test
+    void testKafkaSinkBuilder() {
+        // unfortunately there is not much we can test here, there are no accessor there
+        // so just make sure it can create something...
+        // (at least it tests that the serializationSchema is serializable)
+        factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+                "eqiad.test.event.example", KafkaRecordTimestampStrategy.ROW_EVENT_TIME).build();
+
+        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+                "unrelated topic", KafkaRecordTimestampStrategy.ROW_EVENT_TIME))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The topic [unrelated topic] is now allowed for the stream [test.event.example], " +
+                        "only [eqiad.test.event.example,codfw.test.event.example] are allowed.");
+
+        // Next is a bit an inderect test to make sure that partitioner is properly passed
+        // Create a custom partitioner that cannot be serialized so that the build
+        // method will fail its serialization checks
+        FlinkKafkaPartitioner<Row> partitioner = new FlinkKafkaPartitioner<Row>() {
+            /**
+             * add this object to fail the serialization check
+             */
+            private Object nonSerializableObject = new Object();
+            @Override
+            public int partition(Row record, byte[] key, byte[] value, String targetTopic, int[] partitions) {
+                return 0;
+            }
+        };
+
+        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+                "eqiad.test.event.example", KafkaRecordTimestampStrategy.ROW_EVENT_TIME, partitioner))
+                .hasMessageContaining("The object probably contains or references non serializable fields");
+    }
+
+    @Test
     void testRowTypeInfo() {
         RowTypeInfo typeInfo = factory.rowTypeInfo(streamName);
 
         RowTypeInfo expectedTypeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(
             (ObjectNode)factory.getEventStreamFactory().createEventStream(streamName).schema()
+        );
+
+        assertThat(typeInfo).isEqualTo(expectedTypeInfo);
+    }
+
+    @Test
+    void testRowTypeInfoWithVersion() {
+        RowTypeInfo typeInfo = factory.rowTypeInfo(streamName, "1.1.0");
+
+        RowTypeInfo expectedTypeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(
+                (ObjectNode)factory.getEventStreamFactory().createEventStream(streamName).schema()
         );
 
         assertThat(typeInfo).isEqualTo(expectedTypeInfo);

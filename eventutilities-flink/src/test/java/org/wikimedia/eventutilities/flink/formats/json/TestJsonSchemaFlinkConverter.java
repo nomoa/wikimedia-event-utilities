@@ -4,8 +4,8 @@ package org.wikimedia.eventutilities.flink.formats.json;
 import static org.apache.flink.table.api.Expressions.$;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.flink.api.common.RuntimeExecutionMode;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
@@ -35,15 +36,16 @@ import org.apache.flink.test.util.MiniClusterWithClientResource;
 import org.apache.flink.types.Row;
 import org.junit.ClassRule;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamFactory;
+import org.wikimedia.eventutilities.flink.EventRowTypeInfo;
 import org.wikimedia.eventutilities.flink.test.utils.FlinkTestUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 
@@ -57,7 +59,7 @@ public class TestJsonSchemaFlinkConverter {
         Resources.getResource("event-schemas/repo4").toString()
     );
 
-    private static final File jsonSchemaFile = new File("src/test/resources/event-schemas/repo4/test/event/1.1.0.json");
+    private static final URL jsonSchemaFile = Resources.getResource("event-schemas/repo4/test/event/1.1.0.json");
 
     private static ObjectNode jsonSchema;
 
@@ -72,7 +74,8 @@ public class TestJsonSchemaFlinkConverter {
         DataTypes.FIELD(
          "meta", DataTypes.ROW(
                 DataTypes.FIELD("stream", DataTypes.STRING(), "Name of the stream/queue/dataset that this event belongs in"),
-                DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format")
+                DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format"),
+                DataTypes.FIELD("id", DataTypes.STRING(), "Unique ID of this event")
             )
         ),
         DataTypes.FIELD("test", DataTypes.STRING()),
@@ -101,7 +104,7 @@ public class TestJsonSchemaFlinkConverter {
     );
 
 
-    static final TypeInformation<Row> expectedTypeInformation = Types.ROW_NAMED(
+    static final TypeInformation<Row> expectedTypeInformation = EventRowTypeInfo.create(
         // first field names.
         new String[] {
             "$schema",
@@ -122,12 +125,14 @@ public class TestJsonSchemaFlinkConverter {
         Types.ROW_NAMED(
             new String[] {
                 "stream",
-                "dt"
+                "dt",
+                "id"
             },
             // meta.stream
             Types.STRING,
             // meta.dt
-            Types.INSTANT
+            Types.INSTANT,
+            Types.STRING
         ),
         // test
         Types.STRING,
@@ -156,9 +161,10 @@ public class TestJsonSchemaFlinkConverter {
         expectedExampleRow.setField(0, "/test/event/1.1.0"); // $schema
         expectedExampleRow.setField(1, Instant.parse("2019-01-01T00:00:00Z")); // dt
 
-        Row expectedMeta = new Row(2);
+        Row expectedMeta = new Row(3);
         expectedMeta.setField(0, "test.event.example"); // meta.stream
         expectedMeta.setField(1, Instant.parse("2019-01-01T00:00:30Z")); // meta.dt
+        expectedMeta.setField(2, "bbb07628-ffa9-40cf-8cbc-36d15e2049ba");
 
         expectedExampleRow.setField(2, expectedMeta); // meta
 
@@ -179,7 +185,7 @@ public class TestJsonSchemaFlinkConverter {
 
     @BeforeAll
     public static void setUp() throws IOException {
-        String jsonSchemaString = Files.asCharSource(jsonSchemaFile, Charsets.UTF_8).read();
+        String jsonSchemaString = IOUtils.toString(jsonSchemaFile, Charsets.UTF_8);
         ObjectMapper mapper = new ObjectMapper();
         jsonSchema = (ObjectNode)mapper.readTree(jsonSchemaString);
     }
@@ -189,7 +195,6 @@ public class TestJsonSchemaFlinkConverter {
     void testToDataType() {
         DataType flinkDataType = JsonSchemaFlinkConverter.toDataType(jsonSchema);
         assertThat(flinkDataType.getLogicalType().asSerializableString())
-            .withFailMessage("DataType expected to be converted from JSONSchema")
             .isEqualTo(expectedDataType.getLogicalType().asSerializableString());
     }
 
@@ -281,6 +286,7 @@ public class TestJsonSchemaFlinkConverter {
     }
 
     @Test
+    @Disabled("flaky")
     void testFlinkTableIntegration() throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // Run in BATCH mode to make sure we can collect results and assert at end.

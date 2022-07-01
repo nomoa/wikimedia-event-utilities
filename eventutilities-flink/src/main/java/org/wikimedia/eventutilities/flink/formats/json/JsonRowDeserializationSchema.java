@@ -589,6 +589,11 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
 
     private DeserializationRuntimeConverter assembleRowConverter(
         String[] fieldNames, List<DeserializationRuntimeConverter> fieldConverters) {
+        // Pre-build the positionByName map so that we can re-use accross events
+        LinkedHashMap<String, Integer> positionByName = new LinkedHashMap<>();
+        for (int i = 0; i < fieldNames.length; i++) {
+            positionByName.put(fieldNames[i], i);
+        }
         return (mapper, jsonNode) -> {
             ObjectNode node = (ObjectNode) jsonNode;
             int arity = fieldNames.length;
@@ -634,13 +639,10 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
                     // names to positions, and then from positions to fields.
                     // By providing these to the Row constructor, the Row will
                     // operate in position based mode, but allow lookups by name.
-                    LinkedHashMap<String, Integer> positionByName = new LinkedHashMap<>(arity);
                     Object[] fieldByPosition = new Object[arity];
 
-                    // Build the positionByName map and the converted fieldByPosition array.
+                    // Build the converted fieldByPosition array.
                     for (int i = 0; i < arity; i++) {
-                        String fieldName = fieldNames[i];
-                        positionByName.put(fieldName, i);
                         Object convertedFieldValue = convertJsonField.apply(i);
                         fieldByPosition[i] = convertedFieldValue;
                     }

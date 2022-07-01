@@ -32,6 +32,9 @@ properties:
         type: string
         format: date-time
         maxLength: 128
+      id:
+        description: Unique ID of this event
+        type: string
   test:
     type: string
     default: default value
@@ -72,6 +75,7 @@ examples:
     meta:
       stream: test.event.example
       dt: 2019-01-01T00:00:30Z
+      id: bbb07628-ffa9-40cf-8cbc-36d15e2049ba
     test: specific test value
     test_int: 2
     test_decimal: 2.0

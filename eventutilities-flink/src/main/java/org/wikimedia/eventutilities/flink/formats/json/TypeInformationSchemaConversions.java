@@ -8,6 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
+import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.types.Row;
 import org.wikimedia.eventutilities.core.event.types.SchemaConversions;
 
@@ -138,7 +139,7 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
             fieldTypes[i] = rowFields.get(i).getType();
         }
 
-        return Types.ROW_NAMED(fieldNames, fieldTypes);
+        return new RowTypeInfo(fieldTypes, fieldNames);
     }
 
 }

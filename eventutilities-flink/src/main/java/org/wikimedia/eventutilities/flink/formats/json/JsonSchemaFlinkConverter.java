@@ -5,11 +5,12 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
-import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.LogicalTypeRoot;
 import org.wikimedia.eventutilities.core.event.types.JsonSchemaConverter;
+import org.wikimedia.eventutilities.flink.EventRowTypeInfo;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -134,16 +135,18 @@ public final class JsonSchemaFlinkConverter {
      */
     @Nonnull
     public static TypeInformation<?> toTypeInformation(ObjectNode jsonSchema) {
-        return typeInformationConverter.convert(jsonSchema);
+        JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
+        RowTypeInfo typeInfo = (RowTypeInfo) typeInformationConverter.convert(jsonSchema);
+        return EventRowTypeInfo.create(typeInfo);
     }
 
     /**
-     * Converts this JSONSchema to a Flink DataStream API {@link RowTypeInfo},
+     * Converts this JSONSchema to a Flink DataStream API {@link EventRowTypeInfo},
      * which is an instance of
      * {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
-     * RowTypeInfo has some extra logic for working with TypeInformation
+     * EventRowTypeInfo has some extra logic for working with TypeInformation
      * when it represents a {@link org.apache.flink.types.Row}.
-     * You can RowTypeInfo as if it were a TypeInformation of Row.
+     * You can use RowTypeInfo as if it were a TypeInformation of Row.
      *
      * @param jsonSchema
      *  The JSONSchema ObjectNode.  his should have "type": "object"
@@ -157,10 +160,9 @@ public final class JsonSchemaFlinkConverter {
      *  jsonSchema converted to {@link TypeInformation}&lt;{@link org.apache.flink.types.Row}&gt;.
      */
     @Nonnull
-    public static RowTypeInfo toRowTypeInfo(ObjectNode jsonSchema
+    public static EventRowTypeInfo toRowTypeInfo(ObjectNode jsonSchema
     ) {
-        JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
-        return (RowTypeInfo)toTypeInformation(jsonSchema);
+        return (EventRowTypeInfo) toTypeInformation(jsonSchema);
     }
 
     /**

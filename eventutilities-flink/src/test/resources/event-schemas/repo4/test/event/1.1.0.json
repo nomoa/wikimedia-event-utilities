@@ -10,7 +10,8 @@
       "dt": "2019-01-01T00:00:00Z",
       "meta": {
         "stream": "test.event.example",
-        "dt": "2019-01-01T00:00:30Z"
+        "dt": "2019-01-01T00:00:30Z",
+        "id":"bbb07628-ffa9-40cf-8cbc-36d15e2049ba"
       },
       "test": "specific test value",
       "test_int": 2,
@@ -53,6 +54,10 @@
           "format": "date-time",
           "maxLength": 128,
           "description": "UTC event datetime, in ISO-8601 format"
+        },
+        "id": {
+          "type": "string",
+          "description": "Unique ID of this event"
         }
       }
     },

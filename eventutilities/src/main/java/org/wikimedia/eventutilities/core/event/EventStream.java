@@ -116,6 +116,19 @@ public class EventStream {
     }
 
     /**
+     * Builds schema URI for stream based on WMF conventions.
+     *
+     * This expects that the stream's schema_title will easily map to
+     * a schema URI namespace hierarchy in a schema repository.  E.g.
+     *   schema_title: my/cool/schema and version 1.0.0 returns /my/cool/schema/1.0.0
+     *
+     * @param version version of the schema to load
+     */
+    public URI schemaUri(String version) {
+        return eventSchemaLoader.schemaUri(schemaTitle(), version);
+    }
+
+    /**
      * Builds a latest relative schema URI for stream based on WMF conventions.
      *
      * This expects that the stream's schema_title will easily map to
@@ -126,8 +139,7 @@ public class EventStream {
         // The final part of this URI (here latest) is the schema version.
         // It doesn't actually matter what version we put, since we'll be calling
         // EventSchemaLoader getLatestSchemaUri, and the version will be replaced anyway.
-        URI schemaUri = URI.create("/" + schemaTitle() + "/latest");
-        return eventSchemaLoader.getLatestSchemaUri(schemaUri);
+        return eventSchemaLoader.latestSchemaURI(schemaTitle());
     }
 
     /**
@@ -136,6 +148,15 @@ public class EventStream {
      */
     public JsonNode schema() {
         return loadSchema(schemaUri());
+    }
+
+    /**
+     * Get the version relative schemaUri for the stream from its schema_title
+     * stream config setting and fetches and returns the schema at that URI using eventSchemaLoader.
+     * @param version version of the schema to load
+     */
+    public JsonNode schema(String version) {
+        return loadSchema(schemaUri(version));
     }
 
     /**

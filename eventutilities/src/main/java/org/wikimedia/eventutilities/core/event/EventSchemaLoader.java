@@ -144,6 +144,22 @@ public class EventSchemaLoader {
     }
 
     /**
+     * Builds the URI to the latest schema using this title. E.g.
+     * "my/schema" returns "/my/schema/latest".
+     */
+    public URI latestSchemaURI(String title) {
+        return schemaUri(title, LATEST_FILE_NAME);
+    }
+
+    /**
+     * Builds the URI to the schema using this title and this version.
+     * E.g. "my/schema", "1.1.0" returns "/my/schema/1.1.0".
+     */
+    public URI schemaUri(String title, String version) {
+        return URI.create("/" + title + "/" + version);
+    }
+
+    /**
      * Extracts the event's schema URI and converts it to a latest schema URI.
      * @return 'latest' version of this event's schema URI
      */
