@@ -1,3 +1,9 @@
+## 1.2.0
+- Refactor JsonSchemaConverter to allow for pluggable schema conversions.
+- Implement a JSONSchema conversion to Flink TypeInformation<Row>
+- Copy Flink upstream JsonRowDeserializationSchema
+- Add EventDataStreamFactory to aid in getting DataStream<Row> of WMF Event Platform streams
+
 ## 1.1.0
 - Add flink module
 - Add JsonSchemaConverter for Flink Table API schema conversion

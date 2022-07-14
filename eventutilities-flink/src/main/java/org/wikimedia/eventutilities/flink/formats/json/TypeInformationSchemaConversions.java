@@ -69,7 +69,7 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
     }
 
     /**
-     * <code>elementsAreNullable</code> is ignored, element values can always be null.
+     * {@code elementsAreNullable} is ignored, element values can always be null.
      * See {@link Types#OBJECT_ARRAY}.
      *
      * @return
@@ -85,7 +85,7 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
 
     // TODO what is the generic return type here?
     /**
-     * <code>valuesAreNullable</code> is ignored, an map values can always be null.
+     * {@code valuesAreNullable} is ignored, an map values can always be null.
      * See {@link Types#MAP}.
      *
      * @return
@@ -101,7 +101,7 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
     }
 
     /**
-     * Converts rowFields to TypeInformation of Row.
+     * Converts rowFields to {@link TypeInformation} of {@link Row}.
      * {@link RowField} description and isNullable is ignored.
      * Every field can be null independent of the field's type.
      * See {@link Types#ROW_NAMED}

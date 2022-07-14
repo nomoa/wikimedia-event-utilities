@@ -72,7 +72,7 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
     }
 
     /**
-     * <code>elementsAreNullable</code> is ignored; all Flink Table API elements are nullable.
+     * elementsAreNullable is ignored; all Flink Table API elements are nullable.
      *
      * @return
      *  {@link DataTypes#ARRAY}
@@ -86,7 +86,7 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
     }
 
     /**
-     * <code>valuesAreNullable</code> is ignored; all Flink Table API elements are nullable.
+     * {@code valuesAreNullable} is ignored; all Flink Table API elements are nullable.
      *
      * @return
      *  {@link DataTypes#MAP}
