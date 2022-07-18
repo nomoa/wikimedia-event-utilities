@@ -5,6 +5,41 @@ event streams as part of Wikimedia's Event Platform.  It uses
 JSONSchema repositories and stream configuration to help
 identify streams of events and their schemas.
 
+## Declaring the dependency
+
+In your project Maven `pom.xml`:
+```xml
+<project>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.wikimedia</groupId>
+                <artifactId>eventutilities</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
+```
+
+If you are NOT using `org.wikimedia.discovery:discovery-parent-pom` as a
+parent, you will need to add the Wikimedia Maven repository:
+```xml
+<project>
+    <distributionManagement>
+        <repository>
+            <id>archiva.releases</id>
+            <name>Wikimedia Release Repository</name>
+            <url>https://archiva.wikimedia.org/repository/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>archiva.snapshots</id>
+            <name>Wikimedia Snapshot Repository</name>
+            <url>https://archiva.wikimedia.org/repository/snapshots/</url>
+        </snapshotRepository>
+</project>
+```
+
 ## Example
 
 ### Instantiate and use an EventStream using schema repo URLs and Mediawiki EventStreamConfig
