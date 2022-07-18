@@ -5,6 +5,12 @@ event streams as part of Wikimedia's Event Platform.  It uses
 JSONSchema repositories and stream configuration to help
 identify streams of events and their schemas.
 
+## Documentation
+
+The documentation can be generated with `./mvnw site:site` it is also available
+online at:
+* https://doc.wikimedia.org/wikimedia-event-utilities/
+
 ## Declaring the dependency
 
 In your project Maven `pom.xml`:
