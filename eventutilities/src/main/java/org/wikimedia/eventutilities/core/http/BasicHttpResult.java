@@ -5,6 +5,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.util.function.IntPredicate;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
@@ -15,6 +20,7 @@ import org.apache.http.util.EntityUtils;
  * can represent a failed result caused
  * by a local Exception rather than an HTTP response error status code.
  */
+@ParametersAreNonnullByDefault @ThreadSafe
 public class BasicHttpResult {
     /**
      * If the HTTP request that caused this result was successful.
@@ -31,19 +37,22 @@ public class BasicHttpResult {
     /**
      * The HTTP response message, or the Exception message if a local exception was encountered.
      */
+    @Nullable
     protected final String message;
 
     /**
      * THe HTTP response body, if there was one.
      */
+    @Nullable
     protected final byte[] body;
 
     /**
      * If a local IOException was encountered, this will be set to it.
      */
-    protected IOException exception;
+    @Nullable
+    protected final IOException exception;
 
-    BasicHttpResult(boolean success, int status, String message, byte[] body) {
+    BasicHttpResult(boolean success, int status, @Nullable String message, @Nullable byte[] body) {
         this.success = success;
         this.status = status;
         this.message = message;
@@ -68,6 +77,7 @@ public class BasicHttpResult {
      * isSuccess that determines what http response status codes constitute a successful
      * response.
      */
+    @Nullable
     public static BasicHttpResult create(HttpResponse response, IntPredicate isSuccess) throws IOException {
         int status = response.getStatusLine().getStatusCode();
         boolean success = isSuccess.test(status);
@@ -86,6 +96,7 @@ public class BasicHttpResult {
         return status;
     }
 
+    @Nullable
     public String getMessage() {
         return message;
     }
@@ -93,6 +104,7 @@ public class BasicHttpResult {
     /**
      * Returns a copy of the byte[] response body.
      */
+    @Nullable
     public byte[] getBody() {
         if (body == null) {
             return null;
@@ -102,6 +114,7 @@ public class BasicHttpResult {
         return bodyCopy;
     }
 
+    @Nonnull
     public String getBodyAsString() {
         if (body == null) {
             return "";
@@ -110,6 +123,7 @@ public class BasicHttpResult {
         }
     }
 
+    @Nullable
     public IOException getException() {
         return exception;
     }
@@ -121,6 +135,7 @@ public class BasicHttpResult {
         return exception != null;
     }
 
+    @Nonnull
     public String toString() {
 
         StringBuilder repr = new StringBuilder("BasicHttpResult");

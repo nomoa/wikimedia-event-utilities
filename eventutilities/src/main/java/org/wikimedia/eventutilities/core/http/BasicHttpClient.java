@@ -10,6 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.IntPredicate;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import javax.annotation.WillCloseWhenClosed;
+import javax.annotation.concurrent.NotThreadSafe;
+import javax.annotation.concurrent.ThreadSafe;
+
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -34,16 +41,18 @@ import com.google.common.collect.ImmutableMap;
  * NOTE: This class stores the HTTP response body in an in memory byte[] in {@link BasicHttpResult}
  * and as such should not be used for large or complex HTTP requests.
  */
+@ParametersAreNonnullByDefault @ThreadSafe
 public final class BasicHttpClient implements Closeable {
     /**
      * Underlying HttpClient.
      */
     private final CloseableHttpClient httpClient;
 
-    private BasicHttpClient(CloseableHttpClient httpClient) {
+    private BasicHttpClient(@WillCloseWhenClosed CloseableHttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
+    @Nonnull
     public static Builder builder() {
         return new Builder();
     }
@@ -56,7 +65,12 @@ public final class BasicHttpClient implements Closeable {
      * This function is suitable for use as a {@link ResourceLoader} loader function.
      * Call {@code resourceLoader.withHttpClient(basicHttpClient)} to have an instance
      * of ResourceLoader use a BasicHttpClient to load http and https URLs using this function.
+     *
+     * Note that HTTP specifies that body can exist and be empty or not exist at all. In case
+     * of an existing body that is empty, this method returns an empty {@code byte[]}. In case
+     * of a non-existing body, this method returns {@code null}.
      */
+    @Nullable
     public byte[] getAsBytes(URI uri) {
         BasicHttpResult result = get(uri);
 
@@ -75,6 +89,7 @@ public final class BasicHttpClient implements Closeable {
     /**
      * Performs a GET request at URI and returns a BasicHttpResult.
      */
+    @Nonnull
     public BasicHttpResult get(URI uri, IntPredicate acceptableStatus) {
         HttpUriRequest request = new HttpGet(uri);
         try (CloseableHttpResponse resp = httpClient.execute(request)) {
@@ -87,6 +102,7 @@ public final class BasicHttpClient implements Closeable {
     /**
      * Performs a GET request at URI and returns a BasicHttpResult accepting any 2xx status as a success.
      */
+    @Nonnull
     public BasicHttpResult get(URI uri) {
         return get(uri, BasicHttpClient::acceptableStatusPredicateDefault);
     }
@@ -94,10 +110,11 @@ public final class BasicHttpClient implements Closeable {
     /**
      * Performs a POST request to URI and returns a BasicHttpResult.
      */
+    @Nonnull
     public BasicHttpResult post(
         URI endpoint,
         byte[] postBody,
-        ContentType contentType,
+        @Nullable ContentType contentType,
         IntPredicate acceptableStatus
     ) {
         HttpPost post = new HttpPost(endpoint);
@@ -112,6 +129,7 @@ public final class BasicHttpClient implements Closeable {
     /**
      * Performs a POST request to URI and returns a BasicHttpResult accepting any 2xx status as a success.
      */
+    @Nonnull
     public BasicHttpResult post(
         URI endpoint,
         byte[] data
@@ -138,6 +156,7 @@ public final class BasicHttpClient implements Closeable {
     /**
      * BasicHttpClient builder class.
      */
+    @ParametersAreNonnullByDefault @NotThreadSafe
     public static class Builder {
         /**
          * Map of URL to URL.
@@ -152,6 +171,7 @@ public final class BasicHttpClient implements Closeable {
             clientBuilder = HttpClientBuilder.create();
         }
 
+        @Nonnull
         public HttpClientBuilder httpClientBuilder() {
             return clientBuilder;
         }
@@ -161,6 +181,7 @@ public final class BasicHttpClient implements Closeable {
          * That is, if a request is made to sourceURL, targetURL's host port and protocol will be used instead.
          * If targetURL does not have a port defined, sourceURL's port will be used.
          */
+        @Nonnull
         public Builder addRoute(String sourceURL, String targetURL) throws MalformedURLException {
             this.customRoutes.put(new URL(sourceURL).getHost(), HttpHost.create(targetURL));
             return this;
@@ -169,11 +190,13 @@ public final class BasicHttpClient implements Closeable {
         /**
          * Add custom route using URLs instead of STrings.
          */
+        @Nonnull
         public Builder addRoute(URL sourceURL, URL targetURL) {
             customRoutes.put(sourceURL.getHost(), new HttpHost(targetURL.getHost(), targetURL.getPort(), targetURL.getProtocol()));
             return this;
         }
 
+        @Nonnull
         public BasicHttpClient build() {
             if (!customRoutes.isEmpty()) {
                 clientBuilder.setRoutePlanner(
