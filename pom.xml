@@ -36,6 +36,7 @@
         <flink.version>1.15.0</flink.version>
         <jackson.docs.version>2.11</jackson.docs.version>
         <jackson.version>2.11.1</jackson.version>
+        <junit.version>5.8.2</junit.version>
         <scala.compat.version>2.12</scala.compat.version>
     </properties>
 
@@ -184,13 +185,13 @@
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-api</artifactId>
-                <version>5.6.2</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
-                <version>5.6.2</version>
+                <version>${junit.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

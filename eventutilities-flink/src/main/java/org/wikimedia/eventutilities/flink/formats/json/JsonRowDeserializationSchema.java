@@ -17,8 +17,12 @@
  */
 package org.wikimedia.eventutilities.flink.formats.json;
 
+import static com.google.common.collect.Streams.stream;
 import static java.lang.String.format;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.util.Collections.unmodifiableMap;
+import static java.util.Locale.ENGLISH;
 import static org.apache.flink.formats.common.TimeFormats.RFC3339_TIMESTAMP_FORMAT;
 import static org.apache.flink.formats.common.TimeFormats.RFC3339_TIME_FORMAT;
 import static org.apache.flink.table.types.logical.LogicalTypeRoot.DECIMAL;
@@ -31,7 +35,6 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -187,9 +190,9 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
             }
             throw new IOException(
                 format(
-                    Locale.getDefault(),
+                    ENGLISH,
                     "Failed to deserialize JSON '%s'.",
-                    new String(message, StandardCharsets.UTF_8)
+                    new String(message, UTF_8)
                 ),
                 t
             );
@@ -346,19 +349,21 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
     }
 
     private DeserializationRuntimeConverter createMapConverter(
-        TypeInformation keyType, TypeInformation valueType) {
+            TypeInformation keyType,
+            TypeInformation valueType
+    ) {
         DeserializationRuntimeConverter valueConverter = createConverter(valueType);
         DeserializationRuntimeConverter keyConverter = createConverter(keyType);
+
         return (mapper, jsonNode) -> {
             Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
             Map<Object, Object> result = new HashMap<>();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
+            stream(fields).forEach(entry -> {
                 Object key = keyConverter.convert(mapper, TextNode.valueOf(entry.getKey()));
                 Object value = valueConverter.convert(mapper, entry.getValue());
                 result.put(key, value);
-            }
-            return result;
+            });
+            return unmodifiableMap(result);
         };
     }
 

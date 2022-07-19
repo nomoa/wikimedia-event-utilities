@@ -18,6 +18,7 @@
 
 package org.wikimedia.eventutilities.flink.formats.json;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,12 +34,12 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Stream;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
@@ -46,7 +47,9 @@ import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.types.Row;
 import org.junit.Assert;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.rules.ExpectedException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,14 +64,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * org.apache.flink.formats.json.JsonRowSerializationSchemaTest.
  *
  */
-public class TestJsonRowDeserializationSchema {
+class TestJsonRowDeserializationSchema {
 
     @Rule public ExpectedException thrown = ExpectedException.none();
 
 
     /** Tests simple deserialization using type information. */
     @Test
-    public void testTypeInfoDeserialization() throws Exception {
+    void testTypeInfoDeserialization() throws Exception {
         long id = 1238123899121L;
         String name = "asdlkjasjkdla998y1122";
         byte[] bytes = new byte[1024];
@@ -151,7 +154,7 @@ public class TestJsonRowDeserializationSchema {
 
     /** Tests deserialization with non-existing field name. */
     @Test
-    public void testMissingNode() throws Exception {
+    void testMissingNode() throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Root
@@ -201,7 +204,7 @@ public class TestJsonRowDeserializationSchema {
 
     /** Tests that number of field names and types has to match. */
     @Test
-    public void testNumberOfFieldNamesAndTypesMismatch() {
+    void testNumberOfFieldNamesAndTypesMismatch() {
         try {
             new JsonRowDeserializationSchema.Builder(
                 Types.ROW_NAMED(new String[] {"one", "two", "three"}, Types.LONG))
@@ -212,13 +215,12 @@ public class TestJsonRowDeserializationSchema {
         }
     }
 
-    @Test
-    public void testJsonParse() throws IOException {
-        for (TestSpec spec : testData) {
-            testIgnoreParseErrors(spec);
-            if (spec.errorMessage != null) {
-                testParseErrors(spec);
-            }
+    @ParameterizedTest
+    @MethodSource("testData")
+    void testJsonParse(TestSpec spec) throws IOException {
+        testIgnoreParseErrors(spec);
+        if (spec.errorMessage != null) {
+            testParseErrors(spec);
         }
     }
 
@@ -252,8 +254,8 @@ public class TestJsonRowDeserializationSchema {
                 .failsWithException(hasMessage(containsString(spec.errorMessage))));
     }
 
-    private static List<TestSpec> testData =
-        Arrays.asList(
+    static Stream<TestSpec> testData() {
+        return Stream.of(
             TestSpec.json("{\"id\": \"trueA\"}")
                 .typeInfo(Types.ROW_NAMED(new String[] {"id"}, Types.BOOLEAN))
                 .expect(Row.of(false)),
@@ -339,14 +341,17 @@ public class TestJsonRowDeserializationSchema {
                         new String[] {"id", "factor"},
                         Types.INT,
                         Types.BIG_DEC))
-                .expect(Row.of(1, new BigDecimal("799.929496989092949698"))));
+                .expect(Row.of(1, new BigDecimal("799.929496989092949698")))
+        );
+    }
 
+    @Nonnull
     private static Map<String, Integer> createHashMap(
-        String k1, Integer v1, String k2, Integer v2) {
+            String k1, Integer v1, String k2, Integer v2) {
         Map<String, Integer> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        return map;
+        return unmodifiableMap(map);
     }
 
     private static final class TestSpec {
@@ -378,6 +383,5 @@ public class TestJsonRowDeserializationSchema {
             return this;
         }
     }
-
 
 }
