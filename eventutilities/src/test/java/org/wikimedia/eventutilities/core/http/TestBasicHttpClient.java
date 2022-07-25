@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -14,6 +15,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -24,8 +28,7 @@ class TestBasicHttpClient {
     private WireMockServer wireMockServer;
     private static BasicHttpClient httpClient;
 
-    @BeforeEach
-    public void startWireMock() {
+    @BeforeEach void startWireMock() {
         Options options = new WireMockConfiguration()
                 .dynamicPort()
                 .extensions(new ResponseTemplateTransformer(false));
@@ -51,18 +54,15 @@ class TestBasicHttpClient {
             ));
     }
 
-    @AfterEach
-    public void stopWireMock() {
+    @AfterEach void stopWireMock() {
         wireMockServer.stop();
     }
 
-    @AfterEach
-    public void clostHttpClient() throws IOException {
+    @AfterEach void clostHttpClient() throws IOException {
         if (httpClient != null) httpClient.close();
     }
 
-    @Test
-    public void testGet() {
+    @Test void testGet() {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
         httpClient = builder.build();
 
@@ -71,8 +71,7 @@ class TestBasicHttpClient {
         assertTrue(r.contains("Host: localhost"));
     }
 
-    @Test
-    public void testGetCustomRouteURL() throws IOException {
+    @Test void testGetCustomRouteURL() throws IOException {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
 
         // http://test.host -> http://localhost:xxxxx
@@ -88,8 +87,7 @@ class TestBasicHttpClient {
         assertTrue(r.contains("Host: test.host"));
     }
 
-    @Test
-    public void testGetCustomRouteKeepRequestPort() throws IOException {
+    @Test void testGetCustomRouteKeepRequestPort() throws IOException {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
 
         // http://test.host:xxxxx -> http://localhost:xxxxx,
@@ -106,8 +104,7 @@ class TestBasicHttpClient {
         assertTrue(r.contains("Host: test.host"));
     }
 
-    @Test
-    public void testPost() throws IOException {
+    @Test void testPost() throws IOException {
         BasicHttpClient.Builder builder = BasicHttpClient.builder();
 
         // http://test.host:xxxxx -> http://localhost:xxxxx,
@@ -123,5 +120,23 @@ class TestBasicHttpClient {
         assertTrue(r.getSuccess());
         assertTrue(r.getBodyAsString().contains("Host: test.host"));
         assertTrue(r.getBodyAsString().contains("Body: body time"));
+    }
+
+    @Test void testJsonPost() throws JsonProcessingException {
+        httpClient = BasicHttpClient.builder().build();
+        ObjectMapper mapper = new ObjectMapper();
+
+        String url = "http://localhost:" + wireMockServer.port() + "/test_post";
+
+        JsonNode node = mapper.readTree("{\"k1\":\"v1\",\"k2\":\"v2\"}");
+
+        BasicHttpResult r = httpClient.post(
+                URI.create(url),
+                mapper, node,
+                BasicHttpClient::acceptableStatusPredicateDefault);
+
+        assertTrue(r.getSuccess());
+
+        assertThat(r.getBodyAsString()).contains("Body: {&quot;k1&quot;:&quot;v1&quot;,&quot;k2&quot;:&quot;v2&quot;}");
     }
 }

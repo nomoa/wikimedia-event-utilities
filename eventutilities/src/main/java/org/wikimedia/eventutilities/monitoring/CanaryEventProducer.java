@@ -4,10 +4,7 @@ package org.wikimedia.eventutilities.monitoring;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +14,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import org.apache.http.entity.ContentType;
 import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
 import org.wikimedia.eventutilities.core.event.EventStream;
 import org.wikimedia.eventutilities.core.event.EventStreamConfig;
@@ -25,7 +21,6 @@ import org.wikimedia.eventutilities.core.event.EventStreamFactory;
 import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 import org.wikimedia.eventutilities.core.http.BasicHttpResult;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -303,21 +298,11 @@ public class CanaryEventProducer {
         // jackson to serialize them as an array of events.
         ArrayNode eventsArray = eventsToArrayNode(events);
 
-        try {
-            return httpClient.post(
+        return httpClient.post(
                 eventServiceUri,
-                objectMapper.writeValueAsString(eventsArray).getBytes(UTF_8),
-                ContentType.APPLICATION_JSON,
+                objectMapper, eventsArray,
                 // Only consider 201 and 202 from EventGate as fully successful POSTs.
-                statusCode -> statusCode == 201 || statusCode == 202
-            );
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException(
-                "Encountered JsonProcessingException when attempting to POST canary events to " +
-                    eventServiceUri + ". " + e.getMessage(), e
-            );
-        } catch (IOException ioe) {
-            throw new UncheckedIOException(ioe);
-        }
+                statusCode -> statusCode == 201 || statusCode == 202);
     }
+
 }

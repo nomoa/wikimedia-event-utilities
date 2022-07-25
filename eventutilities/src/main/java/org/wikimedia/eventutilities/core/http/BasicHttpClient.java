@@ -17,6 +17,7 @@ import javax.annotation.WillCloseWhenClosed;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -31,6 +32,8 @@ import org.apache.http.impl.conn.DefaultSchemePortResolver;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
 import org.wikimedia.utils.http.CustomRoutePlanner;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -108,6 +111,21 @@ public final class BasicHttpClient implements Closeable {
     }
 
     /**
+     * Performs a POST request to URI and returns a BasicHttpResult accepting any 2xx status as a success.
+     */
+    @Nonnull
+    public BasicHttpResult post(
+            URI endpoint,
+            byte[] data
+    ) {
+        return post(
+                endpoint, data,
+                ContentType.TEXT_PLAIN,
+                BasicHttpClient::acceptableStatusPredicateDefault
+        );
+    }
+
+    /**
      * Performs a POST request to URI and returns a BasicHttpResult.
      */
     @Nonnull
@@ -117,28 +135,41 @@ public final class BasicHttpClient implements Closeable {
         @Nullable ContentType contentType,
         IntPredicate acceptableStatus
     ) {
+        return post(endpoint, new ByteArrayEntity(postBody, contentType), acceptableStatus);
+    }
+    /**
+     * Performs a POST request to URI and returns a BasicHttpResult.
+     */
+    @Nonnull
+    public BasicHttpResult post(
+        URI endpoint,
+        ObjectMapper mapper,
+        JsonNode node,
+        IntPredicate acceptableStatus
+    ) {
+        return post(
+                endpoint,
+                new JsonHttpEntity(mapper, node),
+                acceptableStatus
+        );
+    }
+
+    /**
+     * Performs a POST request to URI and returns a BasicHttpResult.
+     */
+    @Nonnull
+    public BasicHttpResult post(
+        URI endpoint,
+        HttpEntity postBody,
+        IntPredicate acceptableStatus
+    ) {
         HttpPost post = new HttpPost(endpoint);
-        post.setEntity(new ByteArrayEntity(postBody, contentType));
+        post.setEntity(postBody);
         try (CloseableHttpResponse resp = httpClient.execute(post)) {
             return BasicHttpResult.create(resp, acceptableStatus);
         } catch (IOException e) {
             return new BasicHttpResult(e);
         }
-    }
-
-    /**
-     * Performs a POST request to URI and returns a BasicHttpResult accepting any 2xx status as a success.
-     */
-    @Nonnull
-    public BasicHttpResult post(
-        URI endpoint,
-        byte[] data
-    ) {
-        return post(
-            endpoint, data,
-            ContentType.TEXT_PLAIN,
-            BasicHttpClient::acceptableStatusPredicateDefault
-        );
     }
 
     /**
