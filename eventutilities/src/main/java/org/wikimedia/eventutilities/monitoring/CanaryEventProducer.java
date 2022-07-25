@@ -1,17 +1,21 @@
 package org.wikimedia.eventutilities.monitoring;
 
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import org.apache.http.entity.ContentType;
 import org.wikimedia.eventutilities.core.event.EventSchemaLoader;
@@ -26,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -37,6 +40,7 @@ import com.google.common.collect.ImmutableList;
  * also that the receiving event intake service (e.g. EventGate) will set meta.dt if it is
  * not present in the event.
  */
+@ParametersAreNonnullByDefault
 public class CanaryEventProducer {
 
     /**
@@ -91,6 +95,7 @@ public class CanaryEventProducer {
     /**
      * Returns the EventStreamFactory this CanaryEventProducer is using.
      */
+    @Nonnull
     public EventStreamFactory getEventStreamFactory() {
         return eventStreamFactory;
     }
@@ -99,6 +104,7 @@ public class CanaryEventProducer {
     /**
      * Given a streamName, gets its schema and uses the JSONSchema examples to make a canary event.
      */
+    @Nonnull
     public ObjectNode canaryEvent(String streamName) {
         return canaryEvent(eventStreamFactory.createEventStream(streamName));
     }
@@ -106,6 +112,7 @@ public class CanaryEventProducer {
     /**
      * Given an EventStream, gets its schema and uses the JSONSchema examples to make a canary event.
      */
+    @Nonnull
     public ObjectNode canaryEvent(EventStream es) {
         return makeCanaryEvent(
             es.streamName(),
@@ -116,8 +123,9 @@ public class CanaryEventProducer {
     /**
      * Creates a canary event from an example event for a stream.
      */
+    @Nonnull
     protected static ObjectNode makeCanaryEvent(String streamName, ObjectNode example) {
-        Preconditions.checkArgument(
+        checkArgument(
                 example != null,
                 "Cannot make canary event for %s, example is null.", streamName
         );
@@ -136,6 +144,7 @@ public class CanaryEventProducer {
      * Gets canary events to POST for all streams that EventStreamConfig knows about.
      * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, List<ObjectNode>> getAllCanaryEventsToPost() {
         return getCanaryEventsToPost(
             eventStreamFactory.getEventStreamConfig().cachedStreamNames()
@@ -146,6 +155,7 @@ public class CanaryEventProducer {
      * Gets canary events to POST for a single stream.
      * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(String streamName) {
         return getCanaryEventsToPost(ImmutableList.of(streamName));
     }
@@ -154,6 +164,7 @@ public class CanaryEventProducer {
      * Gets canary events to POST for a List of stream names.
      * Refer to docs for getCanaryEventsToPostForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, List<ObjectNode>> getCanaryEventsToPost(List<String> streamNames) {
         return getCanaryEventsToPostForStreams(eventStreamFactory.createEventStreams(streamNames));
     }
@@ -165,6 +176,7 @@ public class CanaryEventProducer {
      * These can then be iterated through and posted to each
      * event service URI to post expected canary events for each stream.
      */
+    @Nonnull
     public Map<URI, List<ObjectNode>> getCanaryEventsToPostForStreams(
         List<EventStream> eventStreams
     ) {
@@ -198,6 +210,7 @@ public class CanaryEventProducer {
      * Refer to docs for postCanaryEVents(streamNames).
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, BasicHttpResult> postAllCanaryEvents() {
         return postCanaryEvents(
             eventStreamFactory.getEventStreamConfig().cachedStreamNames()
@@ -208,6 +221,7 @@ public class CanaryEventProducer {
      * Posts canary events for a single streamName.
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, BasicHttpResult> postCanaryEvents(String streamName) {
         return postCanaryEvents(ImmutableList.of(streamName));
     }
@@ -216,6 +230,7 @@ public class CanaryEventProducer {
      * Posts canary events for each named event stream.
      * Refer to docs for postCanaryEventsForStreams(eventStreams).
      */
+    @Nonnull
     public Map<URI, BasicHttpResult> postCanaryEvents(List<String> streamNames) {
         return postCanaryEventsForStreams(eventStreamFactory.createEventStreams(streamNames));
     }
@@ -230,6 +245,7 @@ public class CanaryEventProducer {
      * this way  The results should be examined after this method returns
      * to check for any failures.
      */
+    @Nonnull
     public Map<URI, BasicHttpResult> postCanaryEventsForStreams(List<EventStream> eventStreams) {
         return postEventsToUris(getCanaryEventsToPostForStreams(eventStreams));
     }
@@ -237,6 +253,7 @@ public class CanaryEventProducer {
     /**
      * Given a List of ObjectNodes, returns an ArrayNode of those ObjectNodes.
      */
+    @Nonnull
     public static ArrayNode eventsToArrayNode(List<ObjectNode> events) {
         ArrayNode eventsArray = JsonNodeFactory.instance.arrayNode();
         for (ObjectNode event : events) {
@@ -248,6 +265,7 @@ public class CanaryEventProducer {
     /**
      * Iterates over the Map of URI to events and posts events to the URI.
      */
+    @Nonnull
     public Map<URI, BasicHttpResult> postEventsToUris(Map<URI, List<ObjectNode>> uriToEvents) {
         return uriToEvents.entrySet().stream()
             .collect(toImmutableMap(
@@ -279,6 +297,7 @@ public class CanaryEventProducer {
      * and the Exception message will be in message, and in the exception field
      * will have the original Exception.
      */
+    @Nonnull
     public BasicHttpResult postEvents(URI eventServiceUri, List<ObjectNode> events) {
         // Convert List of events to ArrayNode of events to allow
         // jackson to serialize them as an array of events.
@@ -287,7 +306,7 @@ public class CanaryEventProducer {
         try {
             return httpClient.post(
                 eventServiceUri,
-                objectMapper.writeValueAsString(eventsArray).getBytes(StandardCharsets.UTF_8),
+                objectMapper.writeValueAsString(eventsArray).getBytes(UTF_8),
                 ContentType.APPLICATION_JSON,
                 // Only consider 201 and 202 from EventGate as fully successful POSTs.
                 statusCode -> statusCode == 201 || statusCode == 202
