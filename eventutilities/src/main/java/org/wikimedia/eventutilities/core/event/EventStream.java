@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
+import lombok.SneakyThrows;
+
 /**
  * Represents a single event stream.  An event stream is a named continuous stream
  * of events.  An event is a well typed single datum with a specific timestamp.
@@ -139,14 +141,9 @@ public class EventStream {
     /**
      * Loads the schema at the relative schemaUri using our eventSchemaLoader.
      */
+    @SneakyThrows(JsonLoadingException.class)
     protected JsonNode loadSchema(URI schemaUri) {
-        try {
-            return eventSchemaLoader.getSchema(schemaUri);
-        } catch (JsonLoadingException e) {
-            throw new RuntimeException(
-                "Failed loading schema at " + schemaUri + ". " + e.getMessage(), e
-            );
-        }
+        return eventSchemaLoader.getSchema(schemaUri);
     }
 
     /**

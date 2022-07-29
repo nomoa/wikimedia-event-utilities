@@ -18,6 +18,8 @@ import org.wikimedia.eventutilities.core.util.ResourceLoader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Class to aide in constructing {@link EventStream} instances and
@@ -154,7 +156,7 @@ public class EventStreamFactory {
 
         // setEventSchemaLoader by URIs
         public Builder setEventSchemaLoader(List<String> eventSchemaBaseUris) {
-            this.eventSchemaBaseUris = eventSchemaBaseUris;
+            this.eventSchemaBaseUris = ImmutableList.copyOf(eventSchemaBaseUris);
             return this;
         }
         // setEventSchemaLoader by instantiated eventSchemaLoader.
@@ -172,7 +174,7 @@ public class EventStreamFactory {
         }
         // setEventServiceToUriMap by instantiated Map
         public Builder setEventServiceToUriMap(Map<String, String> eventServiceToUriMap) {
-            this.eventServiceToUriMap = eventServiceToUriMap;
+            this.eventServiceToUriMap = ImmutableMap.copyOf(eventServiceToUriMap);
             return this;
         }
 
@@ -197,7 +199,7 @@ public class EventStreamFactory {
         // Set the httpRoutes, if you use this, any previously set
         // http routes will be ignored.
         public Builder setHttpRoutes(Map<String, String> httpRoutes) {
-            this.httpRoutes = httpRoutes;
+            this.httpRoutes = new HashMap<>(httpRoutes);
             return this;
         }
 

@@ -129,7 +129,7 @@ public class EventSchemaLoader {
         try {
             return new URI(uriString);
         } catch (java.net.URISyntaxException e) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                     "Failed building new URI from " + uriString + ". " + e.getMessage(), e
             );
         }

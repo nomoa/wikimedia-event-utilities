@@ -124,7 +124,7 @@ public class EventStreamConfig {
         }
 
         public Builder setEventServiceToUriMap(Map<String, URI> eventServiceToUriMap) {
-            this.eventServiceToUriMap = eventServiceToUriMap;
+            this.eventServiceToUriMap = ImmutableMap.copyOf(eventServiceToUriMap);
             this.eventServiceToUriMapUri = null;
             return this;
         }
@@ -636,7 +636,7 @@ public class EventStreamConfig {
     public URI getEventServiceUriByServiceName(String eventServiceName) {
         URI uri = eventServiceToUriMap.get(eventServiceName);
         if (uri == null) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Cannot get event service URI. " + eventServiceName +
                 ", is not configured in the eventServiceToUriMap"
             );

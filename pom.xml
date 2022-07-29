@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.wikimedia.discovery</groupId>
         <artifactId>discovery-parent-pom</artifactId>
-        <version>1.55</version>
+        <version>1.60</version>
     </parent>
 
     <groupId>org.wikimedia</groupId>
@@ -59,19 +59,8 @@
             </dependency>
             <dependency>
                 <groupId>com.github.java-json-tools</groupId>
-                <artifactId>json-schema-core</artifactId>
-                <version>1.2.10</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.java-json-tools</groupId>
                 <artifactId>json-schema-validator</artifactId>
-                <version>2.2.10</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.activation</groupId>
-                        <artifactId>activation</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>2.2.14</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -241,7 +230,6 @@
                         </execution>
                     </executions>
                 </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
@@ -254,16 +242,19 @@
 
                     </configuration>
                 </plugin>
-
                 <plugin>
-                    <!--
-                        For some reason, version 3.2.0 (current latest version)
-                        does not like dots (".") in directory names. Staying on
-                        version 3.1.0 until it is resolved.
-                    -->
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <groupId>org.basepom.maven</groupId>
+                    <artifactId>duplicate-finder-maven-plugin</artifactId>
+                    <configuration>
+                        <ignoredResourcePatterns>
+                            <!--
+                            draftv4/schema is provided by both:
+                            com.github.java-json-tools:json-schema-core:1.2.14, com.github.java-json-tools:json-schema-validator:2.2.14
+                            unfortunately they have different content: https://github.com/java-json-tools/json-schema-validator/issues/401
+                            -->
+                            <ignoredResourcePattern>draftv4/schema</ignoredResourcePattern>
+                        </ignoredResourcePatterns>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.pitest</groupId>

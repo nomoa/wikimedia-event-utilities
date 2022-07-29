@@ -75,7 +75,7 @@ public class MediawikiEventStreamConfigLoader extends EventStreamConfigLoader {
             );
         } catch (java.io.UnsupportedEncodingException e) {
             // This should never happen.
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Could not URL encode '|'. " + e.getMessage(), e
             );
         }

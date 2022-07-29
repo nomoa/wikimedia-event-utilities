@@ -114,7 +114,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
             // encapsulated schema.
             encapsulatedSchemaUriCacheKey = new URI(schemaUri.toString() + "&encapsulated=true");
         } catch (URISyntaxException e) {
-            throw new RuntimeException("Could not create artificial encapsulatedSchemaUri from " + schemaUri, e);
+            throw new IllegalArgumentException("Could not create artificial encapsulatedSchemaUri from " + schemaUri, e);
         }
 
         if (this.schemaLoader.isCached(encapsulatedSchemaUriCacheKey)) {
@@ -200,7 +200,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
             log.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
             return schemaUri;
         } catch (URISyntaxException e) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Could not build EventLogging schema URI for " + name +
                 " latest revision.", e
             );
@@ -223,7 +223,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
             log.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
             return schemaUri;
         } catch (URISyntaxException e) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Could not build EventLogging schema URI for " + name +
                 " revision " + revision + ".", e
             );

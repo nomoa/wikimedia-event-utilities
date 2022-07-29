@@ -202,7 +202,7 @@ public class EventTableDescriptorBuilder {
      */
     @Nonnull
     public EventTableDescriptorBuilder options(Map<String, String> options) {
-        this.options = options;
+        this.options = new HashMap<>(options);
         return this;
     }
 

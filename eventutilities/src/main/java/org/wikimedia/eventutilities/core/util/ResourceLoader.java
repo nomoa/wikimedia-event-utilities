@@ -22,6 +22,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Loads resource content at URIs.
  * How the resource is loaded depends on the configured loader functions for
@@ -70,14 +72,15 @@ public class ResourceLoader {
      *  be prefixed to it and then attempted to be loaded.
      *  Whichever baseUrl + uri successfully loads first will be returned.
      */
+    @SuppressFBWarnings(value = "OCP_OVERLY_CONCRETE_PARAMETER", justification = "ImmutableList.copyOf is confusing spotbug")
     public ResourceLoader(
         Map<String, Function<URI, byte[]>> loaders,
         Function<URI, byte[]> defaultLoader,
         List<URL> baseUrls
     ) {
-        this.loaders = loaders;
+        this.loaders = ImmutableMap.copyOf(loaders);
         this.defaultLoader = defaultLoader;
-        this.baseUrls = baseUrls;
+        this.baseUrls = ImmutableList.copyOf(baseUrls);
     }
 
     /**
@@ -221,8 +224,9 @@ public class ResourceLoader {
         /**
          * Sets the baseUrls.
          */
+        @SuppressFBWarnings(value = "OCP_OVERLY_CONCRETE_PARAMETER", justification = "ImmutableList.copyOf is confusing spotbug")
         public Builder setBaseUrls(List<URL> baseUrls) {
-            this.baseUrls = baseUrls;
+            this.baseUrls = ImmutableList.copyOf(baseUrls);
             return this;
         }
 
