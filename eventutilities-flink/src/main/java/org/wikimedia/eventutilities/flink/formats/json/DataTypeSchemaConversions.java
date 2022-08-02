@@ -61,7 +61,7 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
 
     /**
      * Note that the default conversion of LogicalType BigIntType is Long,
-     * which is NOT the same as Flink Types.BIG_INT (in the DataStreamAPI).
+     * which is NOT the same as Flink Types.BIG_INT (in the DataStream API).
      *
      * @return
      *  {@link DataTypes#BIGINT}
@@ -72,7 +72,16 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
     }
 
     /**
-     * elementsAreNullable is ignored; all Flink Table API elements are nullable.
+     * @return
+     *  {@link DataTypes#TIMESTAMP_LTZ}
+     */
+    @Override
+    public DataType typeTimestamp() {
+        return DataTypes.TIMESTAMP_LTZ();
+    }
+
+    /**
+     * <code>elementsAreNullable</code> is ignored; all Flink Table API elements are nullable.
      *
      * @return
      *  {@link DataTypes#ARRAY}

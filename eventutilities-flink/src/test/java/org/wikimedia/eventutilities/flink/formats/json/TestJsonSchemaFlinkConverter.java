@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +46,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
+
 @SuppressWarnings({"checkstyle:ClassFanOutComplexity"})
 public class TestJsonSchemaFlinkConverter {
 
@@ -66,10 +68,11 @@ public class TestJsonSchemaFlinkConverter {
             "A URI identifying the JSONSchema for this event. " +
             "This should match an schema's $id in a schema repository. E.g. /schema/title/1.0.0\n"
         ),
-        DataTypes.FIELD("dt", DataTypes.STRING(), "UTC event datetime, in ISO-8601 format"),
+        DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format"),
         DataTypes.FIELD(
          "meta", DataTypes.ROW(
-                DataTypes.FIELD("stream", DataTypes.STRING(), "Name of the stream/queue/dataset that this event belongs in")
+                DataTypes.FIELD("stream", DataTypes.STRING(), "Name of the stream/queue/dataset that this event belongs in"),
+                DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format")
             )
         ),
         DataTypes.FIELD("test", DataTypes.STRING()),
@@ -114,14 +117,17 @@ public class TestJsonSchemaFlinkConverter {
         // $schema
         Types.STRING,
         // dt
-        Types.STRING,
+        Types.INSTANT,
         // meta
         Types.ROW_NAMED(
             new String[] {
-                "stream"
+                "stream",
+                "dt"
             },
             // meta.stream
-            Types.STRING
+            Types.STRING,
+            // meta.dt
+            Types.INSTANT
         ),
         // test
         Types.STRING,
@@ -148,10 +154,12 @@ public class TestJsonSchemaFlinkConverter {
 
         expectedExampleRow = new Row(expectedTypeInformation.getArity());
         expectedExampleRow.setField(0, "/test/event/1.1.0"); // $schema
-        expectedExampleRow.setField(1, "2019-01-01T00:00:00Z"); // dt
+        expectedExampleRow.setField(1, Instant.parse("2019-01-01T00:00:00Z")); // dt
 
-        Row expectedMeta = new Row(1);
+        Row expectedMeta = new Row(2);
         expectedMeta.setField(0, "test.event.example"); // meta.stream
+        expectedMeta.setField(1, Instant.parse("2019-01-01T00:00:30Z")); // meta.dt
+
         expectedExampleRow.setField(2, expectedMeta); // meta
 
         expectedExampleRow.setField(3, "specific test value"); // test
@@ -313,9 +321,17 @@ public class TestJsonSchemaFlinkConverter {
         // It seems that once the Row DataType has gone through the Flink Table factory,
         // it loses its descriptions from the top level fields in the Row.
         // Sub fields that are RowTypes keep the descriptions?!
-        // Assert that field names are the same instead of comparing LogicalTypes directly.
+        // Assert that field names and each top level field DataType match.
         assertThat(((RowType)tableDataType.getLogicalType()).getFieldNames())
             .isEqualTo(((RowType)expectedDataType.getLogicalType()).getFieldNames());
+
+        List<DataType> actualChildren = tableDataType.getChildren();
+        List<DataType> expectedChildren = expectedDataType.getChildren();
+        for (int i = 0; i < actualChildren.size(); i++) {
+            DataType actualChild = actualChildren.get(i);
+            DataType expectedChild = expectedChildren.get(i);
+            assertThat(actualChild.getLogicalType()).isEqualTo(expectedChild.getLogicalType());
+        }
 
         long expectedSum = 0L;
         for (long i = (numberOfRowsToGenerate - 1L); i >= 0L; i--) {

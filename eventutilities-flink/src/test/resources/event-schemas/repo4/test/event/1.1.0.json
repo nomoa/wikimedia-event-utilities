@@ -7,9 +7,10 @@
   "examples": [
     {
       "$schema": "/test/event/1.1.0",
-      "dt": "2019-01asdfs-01T00:00:00Z",
+      "dt": "2019-01-01T00:00:00Z",
       "meta": {
-        "stream": "test.event.example"
+        "stream": "test.event.example",
+        "dt": "2019-01-01T00:00:30Z"
       },
       "test": "specific test value",
       "test_int": 2,
@@ -46,6 +47,12 @@
           "type": "string",
           "description": "Name of the stream/queue/dataset that this event belongs in",
           "minLength": 1
+        },
+        "dt": {
+          "type": "string",
+          "format": "date-time",
+          "maxLength": 128,
+          "description": "UTC event datetime, in ISO-8601 format"
         }
       }
     },

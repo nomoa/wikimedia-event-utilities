@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,10 +61,11 @@ public class TestEventDataStreamFactory {
 
         expectedExampleRow = new Row(8);
         expectedExampleRow.setField(0, "/test/event/1.1.0"); // $schema
-        expectedExampleRow.setField(1, "2019-01-01T00:00:00Z"); // dt
+        expectedExampleRow.setField(1, Instant.parse("2019-01-01T00:00:00Z")); // dt
 
-        Row expectedMeta = new Row(1);
+        Row expectedMeta = new Row(2);
         expectedMeta.setField(0, "test.event.example"); // meta.stream
+        expectedMeta.setField(1, Instant.parse("2019-01-01T00:00:30Z")); // meta.dt
         expectedExampleRow.setField(2, expectedMeta); // meta
 
         expectedExampleRow.setField(3, "specific test value"); // test

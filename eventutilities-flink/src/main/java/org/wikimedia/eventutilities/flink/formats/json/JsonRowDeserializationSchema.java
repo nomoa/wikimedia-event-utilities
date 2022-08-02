@@ -38,6 +38,7 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -449,6 +450,10 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
             return Optional.of(this::convertToLocalTime);
         } else if (simpleTypeInfo == Types.LOCAL_DATE_TIME) {
             return Optional.of(this::convertToLocalDateTime);
+        // -- BEGIN WMF MODIFICATION --
+        } else if (simpleTypeInfo == Types.INSTANT) {
+            return Optional.of(this::convertToInstant);
+        // -- END WMF MODIFICATION --
         } else {
             return Optional.empty();
         }
@@ -547,6 +552,17 @@ public class JsonRowDeserializationSchema implements DeserializationSchema<Row> 
     private Timestamp convertToTimestamp(ObjectMapper mapper, JsonNode jsonNode) {
         return Timestamp.valueOf(convertToLocalDateTime(mapper, jsonNode));
     }
+
+    // -- BEGIN WMF MODIFICATION --
+
+    /**
+     * Converts using convertToLocalDateTime at UTC offset as an Instant.
+     */
+    private Instant convertToInstant(ObjectMapper mapper, JsonNode jsonNode) {
+        LocalDateTime localDateTime = convertToLocalDateTime(mapper, jsonNode);
+        return localDateTime.toInstant(ZoneOffset.UTC);
+    }
+    // -- END WMF MODIFICATION --
 
     private LocalTime convertToLocalTime(ObjectMapper mapper, JsonNode jsonNode) {
         // according to RFC 3339 every full-time must have a timezone;

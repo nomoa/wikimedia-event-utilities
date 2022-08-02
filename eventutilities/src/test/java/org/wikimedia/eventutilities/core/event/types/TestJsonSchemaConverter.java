@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +51,10 @@ public class TestJsonSchemaConverter {
             return 1L;
         }
 
+        public Instant typeTimestamp() {
+            return Instant.ofEpochSecond(1546318800L);
+        }
+
         public Map<String, Object> typeMap(Object keyType, Object valueType, boolean valuesAreNullable) {
             HashMap<String, Object> m = new HashMap<>();
             m.put("key1", "val1");
@@ -77,7 +82,7 @@ public class TestJsonSchemaConverter {
         meta.put("uri", "string");
         meta.put("request_id", "string");
         meta.put("id", "string");
-        meta.put("dt", "string");
+        meta.put("dt", Instant.ofEpochSecond(1546318800L));
         meta.put("domain", "string");
         meta.put("stream", "string");
 

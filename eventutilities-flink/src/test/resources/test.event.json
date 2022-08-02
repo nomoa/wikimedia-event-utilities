@@ -1,4 +1,4 @@
-{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":1,"test":"expected value","meta":{"stream":"test.event.example"},"dt":"2019-01asdfs-01T00:00:00Z","$schema":"/test/event/1.1.0"}
-{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":2,"test":"other value","meta":{"stream":"test.event.example"},"dt":"2019-01asdfs-01T00:00:00Z","$schema":"/test/event/1.1.0"}
-{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":3,"test":"expected value","meta":{"stream":"test.event.example"},"dt":"2019-01asdfs-01T00:00:00Z","$schema":"/test/event/1.1.0"}
-{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":4,"test":"other value","meta":{"stream":"test.event.example"},"dt":"2019-01asdfs-01T00:00:00Z","$schema":"/test/event/1.1.0"}
+{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":1,"test":"expected value","meta":{"stream":"test.event.example"},"dt":"2019-01-01T00:00:00Z","$schema":"/test/event/1.1.0"}
+{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":2,"test":"other value","meta":{"stream":"test.event.example"},"dt":"2019-01-01T00:00:00Z","$schema":"/test/event/1.1.0"}
+{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":3,"test":"expected value","meta":{"stream":"test.event.example"},"dt":"2019-01-01T00:00:00Z","$schema":"/test/event/1.1.0"}
+{"test_map":{"key2":"val2","key1":"val1"},"test_decimal":2,"test_int":4,"test":"other value","meta":{"stream":"test.event.example"},"dt":"2019-01-01T00:00:00Z","$schema":"/test/event/1.1.0"}

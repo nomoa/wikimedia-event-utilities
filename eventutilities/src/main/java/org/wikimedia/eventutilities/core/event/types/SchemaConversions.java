@@ -57,6 +57,12 @@ public interface SchemaConversions<T> {
     T typeDecimal();
 
     /**
+     * Returns type that represents timestamps.
+     */
+    @Nonnull
+    T typeTimestamp();
+
+    /**
      * Returns type that represents Map.
      *
      * @param keyType

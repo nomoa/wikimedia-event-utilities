@@ -21,11 +21,17 @@ properties:
     type: object
     required:
       - stream
+      - dt
     properties:
       stream:
         description: Name of the stream/queue/dataset that this event belongs in
         type: string
         minLength: 1
+      dt:
+        description: 'UTC event datetime, in ISO-8601 format'
+        type: string
+        format: date-time
+        maxLength: 128
   test:
     type: string
     default: default value
@@ -65,6 +71,7 @@ examples:
     dt: 2019-01-01T00:00:00Z
     meta:
       stream: test.event.example
+      dt: 2019-01-01T00:00:30Z
     test: specific test value
     test_int: 2
     test_decimal: 2.0

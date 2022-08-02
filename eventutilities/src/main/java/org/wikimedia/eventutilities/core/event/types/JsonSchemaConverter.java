@@ -41,7 +41,7 @@ public class JsonSchemaConverter<T> {
     private static final String TYPE = "type";
     private static final String ITEMS = "items";
     private static final String REQUIRED = "required";
-    // TO DO: private static final String FORMAT = "format";
+    private static final String FORMAT = "format";
 
     // JSONSchema types
     private static final String TYPE_NULL = "null";
@@ -52,11 +52,13 @@ public class JsonSchemaConverter<T> {
     private static final String TYPE_INTEGER = "integer";
     private static final String TYPE_STRING = "string";
 
+
+    private static final String FORMAT_DATE_TIME = "date-time";
+
     // TO DO: Support conversion from these JSONSchema formats to more specific types.
     // See Flink's JsonRowSchemaConverter
     //    private static final String FORMAT_DATE = "date";
     //    private static final String FORMAT_TIME = "time";
-    //    private static final String FORMAT_DATE_TIME = "date-time";
     //    private static final String CONTENT_ENCODING_BASE64 = "base64";
 
     private static final Logger log = LoggerFactory.getLogger(JsonSchemaConverter.class);
@@ -136,7 +138,21 @@ public class JsonSchemaConverter<T> {
                 break;
 
             case TYPE_STRING:
-                convertedType = schemaConversions.typeString();
+                if (jsonSchema.hasNonNull(FORMAT)) {
+                    String format = getJsonNode(
+                        jsonSchema,
+                        FORMAT,
+                        "Expected field " + nodePath + " to specify " + FORMAT
+                    ).asText();
+
+                    if (format.equals(FORMAT_DATE_TIME)) {
+                        convertedType = schemaConversions.typeTimestamp();
+                    } else {
+                        convertedType = schemaConversions.typeString();
+                    }
+                } else {
+                    convertedType = schemaConversions.typeString();
+                }
                 break;
 
             case TYPE_ARRAY:
@@ -246,9 +262,7 @@ public class JsonSchemaConverter<T> {
                 requiredNode.isArray(),
                 "JSONSchema at " + nodePath +  "\"" + REQUIRED + "\" at " + "  must be an array"
             );
-            requiredNode.elements().forEachRemaining((j) ->
-                requiredFields.add(j.asText())
-            );
+            requiredNode.elements().forEachRemaining(j -> requiredFields.add(j.asText()));
         }
 
         // Convert each property to a RowField and collect in a list of RowFields,

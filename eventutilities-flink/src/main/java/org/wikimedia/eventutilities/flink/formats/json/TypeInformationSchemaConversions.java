@@ -1,5 +1,6 @@
 package org.wikimedia.eventutilities.flink.formats.json;
 
+import java.time.Instant;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -66,6 +67,23 @@ public class TypeInformationSchemaConversions implements SchemaConversions<TypeI
     @Override
     public TypeInformation<Long> typeInteger() {
         return Types.LONG;
+    }
+
+    /**
+     * There are many ways to represent timestamps.  We want to choose the representation
+     * that Flink chooses when converting from {@link org.apache.flink.table.data.TimestampData}
+     * to DataStream API types.
+     * In {@link DataTypeSchemaConversions#typeTimestamp},
+     * we use {@link org.apache.flink.table.api.DataTypes#TIMESTAMP_LTZ},
+     * which will end up using org.apache.flink.table.data.conversion.LocalZonedTimestampInstantConverter
+     * when doing conversions.  So, we choose {@link java.time.Instant} here.
+     *
+     * @return
+     *  {@link Types#INSTANT}
+     */
+    @Override
+    public TypeInformation<Instant> typeTimestamp() {
+        return Types.INSTANT;
     }
 
     /**
