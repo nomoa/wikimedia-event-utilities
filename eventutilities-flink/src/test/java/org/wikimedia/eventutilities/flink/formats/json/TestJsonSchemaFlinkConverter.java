@@ -70,11 +70,11 @@ public class TestJsonSchemaFlinkConverter {
             "A URI identifying the JSONSchema for this event. " +
             "This should match an schema's $id in a schema repository. E.g. /schema/title/1.0.0\n"
         ),
-        DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format"),
+        DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(3), "UTC event datetime, in ISO-8601 format"),
         DataTypes.FIELD(
          "meta", DataTypes.ROW(
                 DataTypes.FIELD("stream", DataTypes.STRING(), "Name of the stream/queue/dataset that this event belongs in"),
-                DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(), "UTC event datetime, in ISO-8601 format"),
+                DataTypes.FIELD("dt", DataTypes.TIMESTAMP_LTZ(3), "UTC event datetime, in ISO-8601 format"),
                 DataTypes.FIELD("id", DataTypes.STRING(), "Unique ID of this event")
             )
         ),

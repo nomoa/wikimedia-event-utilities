@@ -73,11 +73,11 @@ public class DataTypeSchemaConversions implements SchemaConversions<DataType> {
 
     /**
      * @return
-     *  {@link DataTypes#TIMESTAMP_LTZ}
+     *  {@link DataTypes#TIMESTAMP_LTZ} with precision 3
      */
     @Override
     public DataType typeTimestamp() {
-        return DataTypes.TIMESTAMP_LTZ();
+        return DataTypes.TIMESTAMP_LTZ(3);
     }
 
     /**
