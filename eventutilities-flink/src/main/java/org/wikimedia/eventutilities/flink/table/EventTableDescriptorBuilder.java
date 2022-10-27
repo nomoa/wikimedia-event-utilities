@@ -93,6 +93,11 @@ public class EventTableDescriptorBuilder {
     private Schema.Builder _schemaBuilder;
     private Map<String, String> options;
 
+    // We want to default to using ISO-8601 timestamp format, not SQL,
+    // since WMF Event Platform timestamps are ISO-8601 formatted strings.
+    private static final String JSON_TIMESTAMP_FORMAT_KEY = "json.timestamp-format.standard";
+    private static final String JSON_TIMESTAMP_FORMAT_DEFAULT = "ISO-8601";
+
     public EventTableDescriptorBuilder(EventStreamFactory eventStreamFactory) {
         this.eventStreamFactory = eventStreamFactory;
         this.clear();
@@ -409,6 +414,11 @@ public class EventTableDescriptorBuilder {
 
         if (partitionKeys != null) {
             tdb.partitionedBy(partitionKeys);
+        }
+
+        // If not specified, set the JSON timestamp format to our default.
+        if (!options.containsKey(JSON_TIMESTAMP_FORMAT_KEY)) {
+            options.put(JSON_TIMESTAMP_FORMAT_KEY, JSON_TIMESTAMP_FORMAT_DEFAULT);
         }
 
         options.forEach(tdb::option);
