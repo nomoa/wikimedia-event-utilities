@@ -64,6 +64,9 @@ public class TestEventDataStreamFactory {
     );
 
     static final Row expectedExampleRow;
+    public static final String streamPastSchemaVersion = "1.0.0";
+    public static final String streamCurrentSchemaVersion = "1.1.0";
+
     static {
 
         expectedExampleRow = new Row(8);
@@ -105,14 +108,14 @@ public class TestEventDataStreamFactory {
 
     @Test
     void testGetSerializer() throws IOException {
-        JsonRowSerializationSchema serializationSchema = factory.serializer(streamName, "1.1.0");
-        JsonRowDeserializationSchema deserializer = factory.deserializer(streamName, "1.1.0");
-        RowTypeInfo schemaRowTypeInfo = factory.rowTypeInfo(streamName, "1.1.0");
+        JsonRowSerializationSchema serializationSchema = factory.serializer(streamName, streamPastSchemaVersion);
+        JsonRowDeserializationSchema deserializer = factory.deserializer(streamName, streamPastSchemaVersion);
+        RowTypeInfo schemaRowTypeInfo = factory.rowTypeInfo(streamName, streamPastSchemaVersion);
         assertThat(serializationSchema.getTypeInformation()).isEqualTo(schemaRowTypeInfo);
 
         EventStream exampleEventStream = factory.getEventStreamFactory().createEventStream(streamName);
 
-        byte[] jsonEvent = exampleEventStream.exampleEvent().toString().getBytes(StandardCharsets.UTF_8);
+        byte[] jsonEvent = exampleEventStream.exampleEvent(streamPastSchemaVersion).toString().getBytes(StandardCharsets.UTF_8);
 
         ObjectMapper mapper = new ObjectMapper();
         JsonNode expectedEventAsJson = mapper.readTree(jsonEvent);
@@ -149,10 +152,10 @@ public class TestEventDataStreamFactory {
         // unfortunately there is not much we can test here, there are no accessor there
         // so just make sure it can create something...
         // (at least it tests that the serializationSchema is serializable)
-        factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+        factory.kafkaSinkBuilder(streamName, streamPastSchemaVersion, "localhost:9092",
                 "eqiad.test.event.example", KafkaRecordTimestampStrategy.ROW_EVENT_TIME).build();
 
-        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, streamCurrentSchemaVersion, "localhost:9092",
                 "unrelated topic", KafkaRecordTimestampStrategy.ROW_EVENT_TIME))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("The topic [unrelated topic] is now allowed for the stream [test.event.example], " +
@@ -172,7 +175,7 @@ public class TestEventDataStreamFactory {
             }
         };
 
-        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, "1.1.0", "localhost:9092",
+        assertThatThrownBy(() -> factory.kafkaSinkBuilder(streamName, streamCurrentSchemaVersion, "localhost:9092",
                 "eqiad.test.event.example", KafkaRecordTimestampStrategy.ROW_EVENT_TIME, partitioner))
                 .hasMessageContaining("The object probably contains or references non serializable fields");
     }
@@ -190,7 +193,7 @@ public class TestEventDataStreamFactory {
 
     @Test
     void testRowTypeInfoWithVersion() {
-        RowTypeInfo typeInfo = factory.rowTypeInfo(streamName, "1.1.0");
+        RowTypeInfo typeInfo = factory.rowTypeInfo(streamName, streamCurrentSchemaVersion);
 
         RowTypeInfo expectedTypeInfo = JsonSchemaFlinkConverter.toRowTypeInfo(
                 (ObjectNode)factory.getEventStreamFactory().createEventStream(streamName).schema()

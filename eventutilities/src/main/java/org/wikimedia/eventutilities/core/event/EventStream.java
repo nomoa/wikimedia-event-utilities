@@ -173,14 +173,28 @@ public class EventStream {
      * If the schema does not have any examples, returns null.
      */
     public ObjectNode exampleEvent() {
-        JsonNode schema = schema();
+        return extractExampleEvent(schema());
+    }
+
+    /**
+     * Gets the schema for stream and returns the first element in its JSONSchema examples.
+     * If the schema does not have any examples, returns null.
+     *
+     * @param schemaVersion the schemaVersion
+     */
+    public ObjectNode exampleEvent(String schemaVersion) {
+        return extractExampleEvent(schema(schemaVersion));
+    }
+
+    private static ObjectNode extractExampleEvent(JsonNode schema) {
         JsonNode examples = schema.get("examples");
-        if (examples == null) {
+        if (examples == null || examples.isEmpty()) {
             return null;
         } else {
-            return (ObjectNode)examples.get(0);
+            return (ObjectNode) examples.get(0);
         }
     }
+
 
     public String toString() {
         return "EventStream(" + streamName + ") of schema " + schemaTitle();

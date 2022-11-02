@@ -198,7 +198,7 @@ public class EventDataStreamFactory {
         JsonEventGenerator.EventNormalizer generator = eventGenerator
                 .createEventStreamEventGenerator(streamName, stream.schemaUri(version).toString());
 
-        TypeInformation<Row> typeInformation = rowTypeInfo(streamName);
+        TypeInformation<Row> typeInformation = rowTypeInfo(streamName, version);
         return JsonRowSerializationSchema.builder()
                 .withNormalizationFunction(generator)
                 .withObjectMapper(generator.getObjectMapper())

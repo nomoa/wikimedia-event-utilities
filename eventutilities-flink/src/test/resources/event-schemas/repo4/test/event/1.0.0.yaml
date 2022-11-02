@@ -1,0 +1,80 @@
+title: test/event
+description: Schema used for simple tests
+$id: /test/event/1.0.0
+$schema: 'https://json-schema.org/draft-07/schema#'
+type: object
+required:
+  - $schema
+  - meta
+properties:
+  $schema:
+    description: >
+      A URI identifying the JSONSchema for this event. This should match an
+      schema's $id in a schema repository. E.g. /schema/title/1.0.0
+    type: string
+  dt:
+    description: 'UTC event datetime, in ISO-8601 format'
+    type: string
+    format: date-time
+    maxLength: 128
+  meta:
+    type: object
+    required:
+      - stream
+      - dt
+    properties:
+      stream:
+        description: Name of the stream/queue/dataset that this event belongs in
+        type: string
+        minLength: 1
+      dt:
+        description: 'UTC event datetime, in ISO-8601 format'
+        type: string
+        format: date-time
+        maxLength: 128
+      id:
+        description: Unique ID of this event
+        type: string
+  test_int:
+    type: integer
+    default: 2
+  test_decimal:
+    type: number
+  test_map:
+    description: >
+      We want to support 'map' types using additionalProperties to specify the
+      value types.  (Keys are always strings.) A map that has concrete
+      properties specified is still a map. The concrete properties can be used
+      for validation or to require that certain keys exist in the map. The
+      concrete properties will not be considered part of the schema. The
+      concrete properties MUST match the additionalProperties (map value)
+      schema.
+    type: object
+    additionalProperties:
+      type: string
+    required:
+      - key1
+    properties:
+      key1:
+        type: string
+  test_array:
+    description: Array with items schema
+    type: array
+    items:
+      type: object
+      properties:
+        prop1:
+          description: prop 1 field in complex array items
+          type: string
+examples:
+  - $schema: /test/event/1.0.0
+    dt: 2019-01-01T00:00:00Z
+    meta:
+      stream: test.event.example
+      dt: 2019-01-01T00:00:30Z
+      id: bbb07628-ffa9-40cf-8cbc-36d15e2049ba
+    test_int: 2
+    test_decimal: 2.0
+    test_map:
+      key1: val1
+      key2: val2
