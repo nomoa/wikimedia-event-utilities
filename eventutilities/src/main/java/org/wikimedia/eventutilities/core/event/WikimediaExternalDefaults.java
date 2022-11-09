@@ -3,7 +3,6 @@ package org.wikimedia.eventutilities.core.event;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +10,8 @@ import org.wikimedia.eventutilities.core.http.BasicHttpClient;
 import org.wikimedia.eventutilities.core.json.JsonLoader;
 import org.wikimedia.eventutilities.core.json.JsonSchemaLoader;
 import org.wikimedia.eventutilities.core.util.ResourceLoader;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Default values and instances to aide working with Event Streams in
@@ -60,25 +61,22 @@ public final class WikimediaExternalDefaults {
      */
     public static final String EVENT_STREAM_CONFIG_URI = "https://" + MEDIAWIKI_API_HOST + "/w/api.php";
 
-     /**
+    /**
      * This default is suitable for using in WMF production networks, but
      * may become outdated.  For production jobs, you should provide this
      * yourself, or provide a URI path to a config file that specifies this.
      * See also https://wikitech.wikimedia.org/wiki/Service_ports.
      */
-    public static final Map<String, URI> EVENT_SERVICE_TO_URI_MAP = Collections.unmodifiableMap(
-        new HashMap<String, URI>() {{
+    public static final Map<String, URI> EVENT_SERVICE_TO_URI_MAP = ImmutableMap.<String, URI>builder()
             // eventgate-main and eventgate-analytics are not accessible from external networks.
+            .put("eventgate-analytics-external", URI.create("https://intake-analytics.wikimedia.org/v1/events"))
+            .put("eventgate-analytics-external-eqiad", URI.create("https://intake-analytics.wikimedia.org/v1/events"))
+            .put("eventgate-analytics-external-codfw", URI.create("https://intake-analytics.wikimedia.org/v1/events"))
 
-            put("eventgate-analytics-external", URI.create("https://intake-analytics.wikimedia.org/v1/events"));
-            put("eventgate-analytics-external-eqiad", URI.create("https://intake-analytics.wikimedia.org/v1/events"));
-            put("eventgate-analytics-external-codfw", URI.create("https://intake-analytics.wikimedia.org/v1/events"));
-
-            put("eventgate-logging-external", URI.create("https://intake-logging.wikimedia.org/v1/events"));
-            put("eventgate-logging-external-eqiad", URI.create("https://intake-logging.wikimedia.org/v1/events"));
-            put("eventgate-logging-external-codfw", URI.create("https://intake-logging.wikimedia.org/v1/events"));
-        }}
-    );
+            .put("eventgate-logging-external", URI.create("https://intake-logging.wikimedia.org/v1/events"))
+            .put("eventgate-logging-external-eqiad", URI.create("https://intake-logging.wikimedia.org/v1/events"))
+            .put("eventgate-logging-external-codfw", URI.create("https://intake-logging.wikimedia.org/v1/events"))
+            .build();
 
     /**
      * Http client with routes set to work on the internal wikimedia network.

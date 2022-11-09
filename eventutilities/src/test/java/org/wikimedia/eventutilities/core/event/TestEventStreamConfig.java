@@ -75,6 +75,7 @@ public class TestEventStreamConfig {
         assertEquals(expected, configs, "Should read and return a multiple stream configs");
     }
 
+    @SuppressWarnings("checkstyle:Indentation") // looks like a false positive
     @Test
     void cachedStreamNames() {
         List<String> streams = streamConfigs.cachedStreamNames();

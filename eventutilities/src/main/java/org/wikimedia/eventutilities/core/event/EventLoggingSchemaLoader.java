@@ -41,7 +41,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
      */
     protected final JsonNode eventLoggingCapsuleSchema;
 
-    private static final Logger log = LoggerFactory.getLogger(EventLoggingSchemaLoader.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(EventLoggingSchemaLoader.class.getName());
 
     /**
      * Returns an EventLoggingSchemaLoader that uses {@link JsonSchemaLoader} to load JSONSchemas.
@@ -197,7 +197,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
                 "?action=jsonschema&formatversion=2&format=json" +
                 "&title=" + name
             );
-            log.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
+            LOG.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
             return schemaUri;
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(
@@ -220,7 +220,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
                 "&title=" + name +
                 "&revid=" + revision
             );
-            log.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
+            LOG.debug("Built EventLogging schema URI for '{}': {}", name, schemaUri);
             return schemaUri;
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(
@@ -242,7 +242,7 @@ public class EventLoggingSchemaLoader extends EventSchemaLoader {
         // EventLogging MW API doesn't return event schema with type
         // if user doesn't enter it explicitly.  This happens for most EL schemas.
         if (!schemaObject.has("type")) {
-            log.trace("EventLogging event schema is missing type; setting type: object.");
+            LOG.trace("EventLogging event schema is missing type; setting type: object.");
             schemaObject.put("type", "object");
         }
 

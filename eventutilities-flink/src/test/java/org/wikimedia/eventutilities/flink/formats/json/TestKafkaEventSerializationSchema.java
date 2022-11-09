@@ -53,7 +53,7 @@ class TestKafkaEventSerializationSchema {
 
     private final FlinkKafkaPartitioner<Row> partitioner = new FlinkKafkaPartitioner<Row>() {
         @Override
-        public int partition(Row record, byte[] key, byte[] value, String targetTopic, int[] partitions) {
+        public int partition(Row row, byte[] key, byte[] value, String targetTopic, int[] partitions) {
             assertThat(key).isNull();
             assertThat(targetTopic).isEqualTo(TOPIC);
             assertThat(partitions).hasSize(PARTITION);
@@ -106,19 +106,19 @@ class TestKafkaEventSerializationSchema {
         r.setField("test_map", map);
 
         Row elt = typeInfo.createEmptySubRow("test_array");
-        List<Row> test_array = new ArrayList<>();
+        List<Row> testArray = new ArrayList<>();
         elt.setField("prop1", "element1");
-        test_array.add(elt);
+        testArray.add(elt);
         elt = Row.copy(elt);
         elt.setField("prop1", "element2");
-        test_array.add(elt);
-        r.setField("test_array", test_array.toArray());
+        testArray.add(elt);
+        r.setField("test_array", testArray.toArray());
 
-        ProducerRecord<byte[], byte[]> record = serializationSchema.serialize(r, kafkaSinkContext, FLINK_EVENT_TIME.toEpochMilli());
-        assertThat(record.partition()).isEqualTo(PARTITION);
-        assertThat(record.topic()).isEqualTo(TOPIC);
-        assertThat(record.key()).isNull();
-        assertThat(record.timestamp()).isEqualTo(FLINK_EVENT_TIME.toEpochMilli());
+        ProducerRecord<byte[], byte[]> row = serializationSchema.serialize(r, kafkaSinkContext, FLINK_EVENT_TIME.toEpochMilli());
+        assertThat(row.partition()).isEqualTo(PARTITION);
+        assertThat(row.topic()).isEqualTo(TOPIC);
+        assertThat(row.key()).isNull();
+        assertThat(row.timestamp()).isEqualTo(FLINK_EVENT_TIME.toEpochMilli());
         String expectedJson = "{\"test\":\"my_string\"," +
                 "\"test_int\":123," +
                 "\"test_decimal\":3.14," +
@@ -127,6 +127,6 @@ class TestKafkaEventSerializationSchema {
                 "\"dt\":\"1970-01-01T00:02:04Z\"," +
                 "\"$schema\":\"/test/event/1.1.0\"," +
                 "\"meta\":{\"dt\":\"1970-01-01T00:02:03Z\",\"id\":\"00000000-0000-0001-0000-000000000002\",\"stream\":\"test.event.example\"}}";
-        assertThat(mapper.readTree(record.value())).isEqualTo(mapper.readTree(expectedJson));
+        assertThat(mapper.readTree(row.value())).isEqualTo(mapper.readTree(expectedJson));
     }
 }

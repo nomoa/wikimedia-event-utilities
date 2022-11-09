@@ -61,10 +61,9 @@ public class JsonSchemaConverter<T> {
     //    private static final String FORMAT_TIME = "time";
     //    private static final String CONTENT_ENCODING_BASE64 = "base64";
 
-    private static final Logger log = LoggerFactory.getLogger(JsonSchemaConverter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonSchemaConverter.class);
 
-    private final @Nonnull
-    SchemaConversions<T> schemaConversions;
+    private final @Nonnull SchemaConversions<T> schemaConversions;
 
     public JsonSchemaConverter(SchemaConversions<T> schemaConversions) {
         this.schemaConversions = schemaConversions;
@@ -188,7 +187,7 @@ public class JsonSchemaConverter<T> {
                 );
         }
 
-        log.debug(
+        LOG.debug(
             "Converted JSONSchema at {} to Flink Table DataType {}",
             nodePath,
             convertedType

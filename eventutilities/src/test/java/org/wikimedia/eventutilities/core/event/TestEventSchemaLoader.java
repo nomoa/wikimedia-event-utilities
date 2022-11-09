@@ -62,14 +62,14 @@ public class TestEventSchemaLoader {
         meta.put("type", "object");
         meta.set("properties", metaProperties);
         meta.set("required", metaRequired);
-        ObjectNode _schema = jf.objectNode();
-        _schema.put("type", "string");
-        _schema.put("description", "The URI identifying the jsonschema for this event.");
+        ObjectNode schema = jf.objectNode();
+        schema.put("type", "string");
+        schema.put("description", "The URI identifying the jsonschema for this event.");
         ObjectNode testField = jf.objectNode();
         testField.put("type", "string");
         testField.put("default", "default test value");
         ObjectNode expectedTestSchemaProperties = jf.objectNode();
-        expectedTestSchemaProperties.set("$schema", _schema);
+        expectedTestSchemaProperties.set("$schema", schema);
         expectedTestSchemaProperties.set("meta", meta);
         expectedTestSchemaProperties.set("test", testField);
         expectedTestSchema.put("title", "test_event");

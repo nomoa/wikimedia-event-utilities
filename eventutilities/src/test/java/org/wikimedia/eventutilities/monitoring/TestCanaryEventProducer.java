@@ -15,7 +15,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +38,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
+import com.google.common.collect.ImmutableMap;
 
 class TestCanaryEventProducer {
 
@@ -52,24 +52,23 @@ class TestCanaryEventProducer {
         "file://" + new File("src/test/resources/event-schemas/repo3").getAbsolutePath()
     ));
 
-    private static final HashMap<String, URI> eventServiceToUriMap =
-        new HashMap<String, URI>() {{
-            put("eventgate-main", URI.create("https://eventgate-main.discovery.test:4492/v1/events"));
-            put("eventgate-main-eqiad", URI.create("https://eventgate-main.svc.eqiad.test:4492/v1/events"));
-            put("eventgate-main-codfw", URI.create("https://eventgate-main.svc.codfw.test:4492/v1/events"));
+    private static final Map<String, URI> eventServiceToUriMap = ImmutableMap.<String, URI>builder()
+            .put("eventgate-main", URI.create("https://eventgate-main.discovery.test:4492/v1/events"))
+            .put("eventgate-main-eqiad", URI.create("https://eventgate-main.svc.eqiad.test:4492/v1/events"))
+            .put("eventgate-main-codfw", URI.create("https://eventgate-main.svc.codfw.test:4492/v1/events"))
 
-            put("eventgate-analytics", URI.create("https://eventgate-analytics.discovery.test:4592/v1/events"));
-            put("eventgate-analytics-eqiad", URI.create("https://eventgate-analytics.svc.eqiad.test:4592/v1/events"));
-            put("eventgate-analytics-codfw", URI.create("https://eventgate-analytics.svc.codfw.test:4592/v1/events"));
+            .put("eventgate-analytics", URI.create("https://eventgate-analytics.discovery.test:4592/v1/events"))
+            .put("eventgate-analytics-eqiad", URI.create("https://eventgate-analytics.svc.eqiad.test:4592/v1/events"))
+            .put("eventgate-analytics-codfw", URI.create("https://eventgate-analytics.svc.codfw.test:4592/v1/events"))
 
-            put("eventgate-analytics-external", URI.create("https://eventgate-analytics-external.discovery.test:4692/v1/events"));
-            put("eventgate-analytics-external-eqiad", URI.create("https://eventgate-analytics-external.svc.eqiad.test:4692/v1/events"));
-            put("eventgate-analytics-external-codfw", URI.create("https://eventgate-analytics-external.svc.codfw.test:4692/v1/events"));
+            .put("eventgate-analytics-external", URI.create("https://eventgate-analytics-external.discovery.test:4692/v1/events"))
+            .put("eventgate-analytics-external-eqiad", URI.create("https://eventgate-analytics-external.svc.eqiad.test:4692/v1/events"))
+            .put("eventgate-analytics-external-codfw", URI.create("https://eventgate-analytics-external.svc.codfw.test:4692/v1/events"))
 
-            put("eventgate-logging-external", URI.create("https://eventgate-logging-external.discovery.test:4392/v1/events"));
-            put("eventgate-logging-external-eqiad", URI.create("https://eventgate-logging-external.svc.eqiad.test:4392/v1/events"));
-            put("eventgate-logging-external-codfw", URI.create("https://eventgate-logging-external.svc.codfw.test:4392/v1/events"));
-        }};
+            .put("eventgate-logging-external", URI.create("https://eventgate-logging-external.discovery.test:4392/v1/events"))
+            .put("eventgate-logging-external-eqiad", URI.create("https://eventgate-logging-external.svc.eqiad.test:4392/v1/events"))
+            .put("eventgate-logging-external-codfw", URI.create("https://eventgate-logging-external.svc.codfw.test:4392/v1/events"))
+            .build();
 
 
     private static CanaryEventProducer canaryEventProducer;
@@ -163,25 +162,19 @@ class TestCanaryEventProducer {
             "eventlogging_SearchSatisfaction"
         );
 
-        Map<URI, List<ObjectNode>> expected = new HashMap<URI, List<ObjectNode>>() {{
-            put(
+        Map<URI, List<ObjectNode>> expected = ImmutableMap.of(
                 URI.create("https://eventgate-main.svc.eqiad.test:4492/v1/events"),
-                Arrays.asList(pageCreateCanaryEvent)
-            );
-            put(
+                Arrays.asList(pageCreateCanaryEvent),
+
                 URI.create("https://eventgate-main.svc.codfw.test:4492/v1/events"),
-                Arrays.asList(pageCreateCanaryEvent)
-            );
-            put(
+                Arrays.asList(pageCreateCanaryEvent),
+
                 URI.create("https://eventgate-analytics-external.svc.eqiad.test:4692/v1/events"),
-                Arrays.asList(searchSatisfactionCanaryEvent)
-            );
-            put(
+                Arrays.asList(searchSatisfactionCanaryEvent),
+
                 URI.create("https://eventgate-analytics-external.svc.codfw.test:4692/v1/events"),
                 Arrays.asList(searchSatisfactionCanaryEvent)
-            );
-        }};
-
+        );
         List<URI> expectedKeys = expected.keySet().stream().sorted().collect(Collectors.toList());
         List<URI> actualKeys = canaryEventsToPost.keySet().stream().sorted().collect(Collectors.toList());
         assertEquals(

@@ -58,9 +58,9 @@ public class EventSchemaLoader {
     /**
      * Used to parse a {@link JsonNode} into a {@link JsonSchema} that can be used for validation.
      */
-    private static final JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.byDefault();
+    private static final JsonSchemaFactory JSON_SCHEMA_FACTORY = JsonSchemaFactory.byDefault();
 
-    private static final Logger log = LoggerFactory.getLogger(EventSchemaLoader.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(EventSchemaLoader.class.getName());
 
     /**
      * Constructs a EventSchemaLoader that prefixes URIs with baseURI and
@@ -116,7 +116,7 @@ public class EventSchemaLoader {
      * @return the jsonschema at schemaURI.
      */
     public JsonNode load(URI schemaUri) throws JsonLoadingException {
-        log.debug("Loading event schema at {}", schemaUri);
+        LOG.debug("Loading event schema at {}", schemaUri);
         return schemaLoader.load(schemaUri);
     }
 
@@ -222,7 +222,7 @@ public class EventSchemaLoader {
      * Given a json schema parsed as a JsonNode materialize JsonSchema suited for validation.
      */
     public JsonSchema getJsonSchema(JsonNode schema) throws ProcessingException {
-        return jsonSchemaFactory.getJsonSchema(schema);
+        return JSON_SCHEMA_FACTORY.getJsonSchema(schema);
     }
 
     /**

@@ -64,13 +64,13 @@ class TestJsonRowSerializationSchema {
         r.setField("test_map", map);
 
         Row elt = typeInfo.createEmptySubRow("test_array");
-        List<Row> test_array = new ArrayList<>();
+        List<Row> testArray = new ArrayList<>();
         elt.setField("prop1", "element1");
-        test_array.add(elt);
+        testArray.add(elt);
         elt = Row.copy(elt);
         elt.setField("prop1", "element2");
-        test_array.add(elt);
-        r.setField("test_array", test_array.toArray());
+        testArray.add(elt);
+        r.setField("test_array", testArray.toArray());
 
         byte[] bytes = serializationSchema.serialize(r);
         String expectedJson = "{\"test\":\"my_string\"," +
@@ -102,13 +102,13 @@ class TestJsonRowSerializationSchema {
         r.setField("test_map", map);
 
         Row elt = typeInfo.createEmptySubRow("test_array");
-        List<Row> test_array = new ArrayList<>();
+        List<Row> testArray = new ArrayList<>();
         elt.setField("prop1", "element1");
-        test_array.add(elt);
+        testArray.add(elt);
         elt = Row.copy(elt);
         elt.setField("prop1", "element2");
-        test_array.add(elt);
-        r.setField("test_array", test_array.toArray());
+        testArray.add(elt);
+        r.setField("test_array", testArray.toArray());
 
         Assertions.assertThatThrownBy(() -> serializationSchema.serialize(r))
                 .isInstanceOf(RuntimeException.class)

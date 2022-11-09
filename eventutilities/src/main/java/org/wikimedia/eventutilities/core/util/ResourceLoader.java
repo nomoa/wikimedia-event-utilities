@@ -54,7 +54,7 @@ public class ResourceLoader {
      */
     private final List<URL> baseUrls;
 
-    private static final Logger log = LoggerFactory.getLogger(ResourceLoader.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceLoader.class.getName());
 
 
     /**
@@ -130,7 +130,7 @@ public class ResourceLoader {
             // while trying, log them all but only throw the first one.
             if (!loadingExceptions.isEmpty()) {
                 for (ResourceLoadingException e: loadingExceptions) {
-                    log.error("Caught exception when trying to load resource.", e);
+                    LOG.error("Caught exception when trying to load resource.", e);
                 }
                 throw loadingExceptions.get(0);
             } else {
@@ -178,7 +178,7 @@ public class ResourceLoader {
         public Builder() {
             defaultLoader = uri -> {
                 try {
-                   return Resources.toByteArray(uri.toURL());
+                    return Resources.toByteArray(uri.toURL());
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

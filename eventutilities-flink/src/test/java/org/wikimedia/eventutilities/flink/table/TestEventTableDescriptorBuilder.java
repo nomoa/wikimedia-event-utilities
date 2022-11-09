@@ -163,13 +163,13 @@ public class TestEventTableDescriptorBuilder {
     @Test
     void testSetupKafkaPreconditions() {
         assertThatIllegalStateException()
-            .isThrownBy(() -> {
-            builder.setupKafka(
-                "localhost:9092",
-                "my_consumer_group"
-            );
-        })
-        .withFailMessage("Must call eventStream before setupKafka");
+                .isThrownBy(() -> {
+                    builder.setupKafka(
+                            "localhost:9092",
+                            "my_consumer_group"
+                    );
+                })
+                .withFailMessage("Must call eventStream before setupKafka");
         builder.clear();
     }
 

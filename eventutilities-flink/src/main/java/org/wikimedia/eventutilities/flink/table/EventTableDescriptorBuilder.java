@@ -90,7 +90,7 @@ public class EventTableDescriptorBuilder {
     private String connectorIdentifier;
     private String formatIdentifier;
     private String[] partitionKeys;
-    private Schema.Builder _schemaBuilder;
+    private Schema.Builder schemaBuilder;
     private Map<String, String> options;
 
     // We want to default to using ISO-8601 timestamp format, not SQL,
@@ -197,7 +197,7 @@ public class EventTableDescriptorBuilder {
      */
     @Nonnull
     public EventTableDescriptorBuilder schemaBuilder(Schema.Builder schemaBuilder) {
-        this._schemaBuilder = schemaBuilder;
+        this.schemaBuilder = schemaBuilder;
         return this;
     }
 
@@ -351,8 +351,7 @@ public class EventTableDescriptorBuilder {
             "TIMESTAMP_LTZ(3) NOT NULL",
             "timestamp",
             true
-        )
-        .watermark(columnName, sqlExpression);
+        ).watermark(columnName, sqlExpression);
 
         return schemaBuilder(sb);
     }
@@ -370,17 +369,17 @@ public class EventTableDescriptorBuilder {
     @Nonnull
     public Schema.Builder getSchemaBuilder() {
         Preconditions.checkState(
-            !(this.eventStream == null && this._schemaBuilder == null),
+            !(this.eventStream == null && this.schemaBuilder == null),
             "Must call eventStream() or schemaBuilder() before calling getSchemaBuilder()."
         );
 
-        if (this._schemaBuilder == null) {
-            this._schemaBuilder = JsonSchemaFlinkConverter.toSchemaBuilder(
+        if (this.schemaBuilder == null) {
+            this.schemaBuilder = JsonSchemaFlinkConverter.toSchemaBuilder(
                 (ObjectNode)eventStream.schema()
             );
         }
 
-        return this._schemaBuilder;
+        return this.schemaBuilder;
     }
 
     /**
@@ -439,7 +438,7 @@ public class EventTableDescriptorBuilder {
         this.connectorIdentifier = null;
         this.formatIdentifier = null;
         this.partitionKeys = null;
-        this._schemaBuilder = null;
+        this.schemaBuilder = null;
 
         return this;
     }

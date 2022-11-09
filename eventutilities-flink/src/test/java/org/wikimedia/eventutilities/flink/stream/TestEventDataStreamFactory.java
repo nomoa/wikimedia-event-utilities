@@ -83,10 +83,10 @@ public class TestEventDataStreamFactory {
         expectedExampleRow.setField(4, 2L); // test_int
         expectedExampleRow.setField(5, 2.0D); // test_decimal
 
-        Map<String, String> test_map = new HashMap<>();
-        test_map.put("key1", "val1");
-        test_map.put("key2", "val2");
-        expectedExampleRow.setField(6, test_map); // test_map
+        Map<String, String> testMap = new HashMap<>();
+        testMap.put("key1", "val1");
+        testMap.put("key2", "val2");
+        expectedExampleRow.setField(6, testMap); // test_map
 
         expectedExampleRow.setField(7, null); // test_array
     }
@@ -170,7 +170,7 @@ public class TestEventDataStreamFactory {
              */
             private Object nonSerializableObject = new Object();
             @Override
-            public int partition(Row record, byte[] key, byte[] value, String targetTopic, int[] partitions) {
+            public int partition(Row row, byte[] key, byte[] value, String targetTopic, int[] partitions) {
                 return 0;
             }
         };

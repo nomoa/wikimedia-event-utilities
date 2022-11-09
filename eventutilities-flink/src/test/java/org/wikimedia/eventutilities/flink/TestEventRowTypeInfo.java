@@ -81,75 +81,75 @@ class TestEventRowTypeInfo {
      */
     public static final RowTypeInfo META_FIELD_TYPEINFO_V1_1_0 = new RowTypeInfo(
             new TypeInformation[]{
-                    TypeInformation.of(Instant.class), // Instant is not yet supported during schema conversion
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
+                TypeInformation.of(Instant.class), // Instant is not yet supported during schema conversion
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
             },
             new String[]{
-                    META_INGESTION_TIME_FIELD,
-                    "domain",
-                    META_ID_FIELD,
-                    "request_id",
-                    META_STREAM_FIELD,
-                    "uri"
+                META_INGESTION_TIME_FIELD,
+                "domain",
+                META_ID_FIELD,
+                "request_id",
+                META_STREAM_FIELD,
+                "uri"
             });
     RowTypeInfo subField = new RowTypeInfo(
             new TypeInformation[]{
-                    TypeInformation.of(String.class)
+                TypeInformation.of(String.class)
             },
             new String[]{"string_in_subfield"}
     );
     RowTypeInfo subFieldV2 = new RowTypeInfo(
             new TypeInformation[]{
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class)
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class)
             },
             new String[]{"string_in_subfield", "string_in_subfield_v2"}
     );
     Object o = TypeInformation.of(Map.class);
     RowTypeInfo complexSubfield = new RowTypeInfo(
             new TypeInformation[]{
-                    subField,
+                subField,
             },
             new String[]{"nested_subfield"}
     );
     RowTypeInfo complexSubfieldV2 = new RowTypeInfo(
             new TypeInformation[]{
-                    subField, subFieldV2
+                subField, subFieldV2
             },
             new String[]{"nested_subfield", "nested_subfield_v2"}
     );
     RowTypeInfo rowType = new RowTypeInfo(
             new TypeInformation[]{
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(Integer.class),
-                    META_FIELD_TYPEINFO_V1_1_0,
-                    subField,
-                    new MapTypeInfo<>(TypeInformation.of(String.class), subField),
-                    ObjectArrayTypeInfo.getInfoFor(subField),
-                    complexSubfield
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(Integer.class),
+                META_FIELD_TYPEINFO_V1_1_0,
+                subField,
+                new MapTypeInfo<>(TypeInformation.of(String.class), subField),
+                ObjectArrayTypeInfo.getInfoFor(subField),
+                complexSubfield
             },
             new String[]{"$schema", "a_string", "a_int", "meta", "my_subfield",
-                    "map_type", "array_type", "complex_subfield"});
+                "map_type", "array_type", "complex_subfield"});
 
     RowTypeInfo rowTypeV2 = new RowTypeInfo(
             new TypeInformation[]{
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(String.class),
-                    TypeInformation.of(Integer.class),
-                    META_FIELD_TYPEINFO_V1_1_0,
-                    subFieldV2,
-                    new MapTypeInfo<>(TypeInformation.of(String.class), subFieldV2),
-                    ObjectArrayTypeInfo.getInfoFor(subFieldV2),
-                    complexSubfieldV2
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(String.class),
+                TypeInformation.of(Integer.class),
+                META_FIELD_TYPEINFO_V1_1_0,
+                subFieldV2,
+                new MapTypeInfo<>(TypeInformation.of(String.class), subFieldV2),
+                ObjectArrayTypeInfo.getInfoFor(subFieldV2),
+                complexSubfieldV2
             },
             new String[]{"$schema", "a_string", "a_string_v2", "a_int", "meta", "my_subfield",
-                    "map_type", "array_type", "complex_subfield"});
+                "map_type", "array_type", "complex_subfield"});
 
     EventRowTypeInfo eventRowTypeInfo = EventRowTypeInfo.create(rowType);
 

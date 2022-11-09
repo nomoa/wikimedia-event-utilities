@@ -64,13 +64,13 @@ public final class JsonSchemaFlinkConverter {
     /**
      * JsonSchemaConverter instance to convert to Flink Table API DataType.
      */
-    private static final JsonSchemaConverter<DataType> dataTypeConverter =
+    private static final JsonSchemaConverter<DataType> DATA_TYPE_CONVERTER =
         new JsonSchemaConverter<>(new DataTypeSchemaConversions());
 
     /**
      * JsonSchemaConverter to convert to Flink DataStream API TypeInformation.
      */
-    private static final JsonSchemaConverter<TypeInformation<?>> typeInformationConverter =
+    private static final JsonSchemaConverter<TypeInformation<?>> TYPE_INFORMATION_CONVERTER =
         new JsonSchemaConverter<>(new TypeInformationSchemaConversions());
 
     /**
@@ -121,7 +121,7 @@ public final class JsonSchemaFlinkConverter {
      */
     @Nonnull
     public static DataType toDataType(ObjectNode jsonSchema) {
-        return dataTypeConverter.convert(jsonSchema);
+        return DATA_TYPE_CONVERTER.convert(jsonSchema);
     }
 
     /**
@@ -136,7 +136,7 @@ public final class JsonSchemaFlinkConverter {
     @Nonnull
     public static TypeInformation<?> toTypeInformation(ObjectNode jsonSchema) {
         JsonSchemaConverter.checkJsonSchemaIsObject(jsonSchema);
-        RowTypeInfo typeInfo = (RowTypeInfo) typeInformationConverter.convert(jsonSchema);
+        RowTypeInfo typeInfo = (RowTypeInfo) TYPE_INFORMATION_CONVERTER.convert(jsonSchema);
         return EventRowTypeInfo.create(typeInfo);
     }
 

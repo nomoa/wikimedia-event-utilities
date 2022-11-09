@@ -172,10 +172,10 @@ public class TestJsonSchemaFlinkConverter {
         expectedExampleRow.setField(4, 2L); // test_int
         expectedExampleRow.setField(5, 2.0D); // test_decimal
 
-        Map<String, String> test_map = new HashMap<>();
-        test_map.put("key1", "val1");
-        test_map.put("key2", "val2");
-        expectedExampleRow.setField(6, test_map); // test_map
+        Map<String, String> testMap = new HashMap<>();
+        testMap.put("key1", "val1");
+        testMap.put("key2", "val2");
+        expectedExampleRow.setField(6, testMap); // test_map
 
         expectedExampleRow.setField(7, null); // test_array
     }

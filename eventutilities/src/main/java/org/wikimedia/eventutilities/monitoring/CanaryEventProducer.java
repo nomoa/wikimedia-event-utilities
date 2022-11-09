@@ -51,7 +51,7 @@ public class CanaryEventProducer {
     /**
      * Used for serializing JsonNode events to Strings.
      */
-    protected static final ObjectMapper objectMapper = new ObjectMapper();
+    protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     /**
      * Will be used as the value of meta.domain when building canary events.
@@ -300,7 +300,7 @@ public class CanaryEventProducer {
 
         return httpClient.post(
                 eventServiceUri,
-                objectMapper, eventsArray,
+                OBJECT_MAPPER, eventsArray,
                 // Only consider 201 and 202 from EventGate as fully successful POSTs.
                 statusCode -> statusCode == 201 || statusCode == 202);
     }

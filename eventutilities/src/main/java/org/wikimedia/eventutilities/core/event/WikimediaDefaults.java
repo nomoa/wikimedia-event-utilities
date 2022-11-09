@@ -61,28 +61,28 @@ public final class WikimediaDefaults {
      */
     public static final String EVENT_STREAM_CONFIG_URI = "https://" + MEDIAWIKI_API_HOST + "/w/api.php";
 
-     /**
+    /**
      * This default is suitable for using in WMF production networks, but
      * may become outdated.  For production jobs, you should provide this
      * yourself, or provide a URI path to a config file that specifies this.
      * See also https://wikitech.wikimedia.org/wiki/Service_ports.
      */
-     public static final Map<String, URI> EVENT_SERVICE_TO_URI_MAP = ImmutableMap.<String, URI>builder()
-         .put("eventgate-main", URI.create("https://eventgate-main.discovery.wmnet:4492/v1/events"))
-         .put("eventgate-main-eqiad", URI.create("https://eventgate-main.svc.eqiad.wmnet:4492/v1/events"))
-         .put("eventgate-main-codfw", URI.create("https://eventgate-main.svc.codfw.wmnet:4492/v1/events"))
+    public static final Map<String, URI> EVENT_SERVICE_TO_URI_MAP = ImmutableMap.<String, URI>builder()
+            .put("eventgate-main", URI.create("https://eventgate-main.discovery.wmnet:4492/v1/events"))
+            .put("eventgate-main-eqiad", URI.create("https://eventgate-main.svc.eqiad.wmnet:4492/v1/events"))
+            .put("eventgate-main-codfw", URI.create("https://eventgate-main.svc.codfw.wmnet:4492/v1/events"))
 
-         .put("eventgate-analytics", URI.create("https://eventgate-analytics.discovery.wmnet:4592/v1/events"))
-         .put("eventgate-analytics-eqiad", URI.create("https://eventgate-analytics.svc.eqiad.wmnet:4592/v1/events"))
-         .put("eventgate-analytics-codfw", URI.create("https://eventgate-analytics.svc.codfw.wmnet:4592/v1/events"))
+            .put("eventgate-analytics", URI.create("https://eventgate-analytics.discovery.wmnet:4592/v1/events"))
+            .put("eventgate-analytics-eqiad", URI.create("https://eventgate-analytics.svc.eqiad.wmnet:4592/v1/events"))
+            .put("eventgate-analytics-codfw", URI.create("https://eventgate-analytics.svc.codfw.wmnet:4592/v1/events"))
 
-         .put("eventgate-analytics-external", URI.create("https://eventgate-analytics-external.discovery.wmnet:4692/v1/events"))
-         .put("eventgate-analytics-external-eqiad", URI.create("https://eventgate-analytics-external.svc.eqiad.wmnet:4692/v1/events"))
-         .put("eventgate-analytics-external-codfw", URI.create("https://eventgate-analytics-external.svc.codfw.wmnet:4692/v1/events"))
-         .put("eventgate-logging-external", URI.create("https://eventgate-logging-external.discovery.wmnet:4392/v1/events"))
-         .put("eventgate-logging-external-eqiad", URI.create("https://eventgate-logging-external.svc.eqiad.wmnet:4392/v1/events"))
-         .put("eventgate-logging-external-codfw", URI.create("https://eventgate-logging-external.svc.codfw.wmnet:4392/v1/events"))
-         .build();
+            .put("eventgate-analytics-external", URI.create("https://eventgate-analytics-external.discovery.wmnet:4692/v1/events"))
+            .put("eventgate-analytics-external-eqiad", URI.create("https://eventgate-analytics-external.svc.eqiad.wmnet:4692/v1/events"))
+            .put("eventgate-analytics-external-codfw", URI.create("https://eventgate-analytics-external.svc.codfw.wmnet:4692/v1/events"))
+            .put("eventgate-logging-external", URI.create("https://eventgate-logging-external.discovery.wmnet:4392/v1/events"))
+            .put("eventgate-logging-external-eqiad", URI.create("https://eventgate-logging-external.svc.eqiad.wmnet:4392/v1/events"))
+            .put("eventgate-logging-external-codfw", URI.create("https://eventgate-logging-external.svc.codfw.wmnet:4392/v1/events"))
+            .build();
 
     /**
      * Http client with routes set to work on the internal wikimedia network.
